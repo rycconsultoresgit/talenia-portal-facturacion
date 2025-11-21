@@ -3,105 +3,92 @@
 import MainContainer from "../components/Common/MainContainer";
 import MainFooter from "../components/Common/MainFooter";
 import BackgroundImage from "../components/Common/BackgroundImage";
-import { useRef, useState } from "react";
-import DrawerMenu from "../components/Drawer/DrawerMenu";
-
+import Image from "next/image";
 import main_bg from "./../assets/main_container_bg.png";
-import { PrimaryButton } from "../components/Common/Buttons";
-import { CgExtensionAdd } from "react-icons/cg";
 import { useDisclosure } from "@heroui/react";
-import NewAnalysisModal from "../components/Modals/NewAnalysisModal";
-import NewFolderModal from "../components/Modals/NewFolderModal";
-import FolderSection from "../components/Home/FolderSection";
 import { useAuthCheck } from "../hooks/useAuthCheck";
-import { useAuth } from "../context/AuthContext";
-import TaleniaNavbar from "../components/Common/TaleniaNavbar";
+import { BiMenu } from "react-icons/bi";
+import BillingView from "../components/Billing/BillingView";
+import logo from "../assets/logo_white.webp";
+import Sidebar from "../components/Billing/Sidebar";
+import UsersView from "../components/Billing/UsersViwe";
+import { useState } from "react";
+import RolesView from "../components/Billing/RolesView";
+import PermissionsView from "../components/Billing/PermissionsView";
+import PlansView from "../components/Billing/PlansView";
 
 const Home = () => {
-  const { userId } = useAuth();
-
-  // Verificar autenticación al cargar la página
   useAuthCheck("/");
+  const { isOpen, onOpenChange } = useDisclosure();
+  const [billingVisible, setBillingVisible] = useState(true)
+  const [userVisible, setUserVisible] = useState(false)
+  const [rolesVisible, setRolesVisible] = useState(false)
+  const [permissionsVisible, setPermissionsVisible] = useState(false)
+  const [plansVisible, setPlansVisible] = useState(false)
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const folderRefreshRef = useRef<(() => void) | null>(null);
-
-  const {
-    isOpen: isOpenNewAnalysis,
-    onOpen: onOpenNewAnalysis,
-    onOpenChange: onOpenChangeNewAnalysis,
-  } = useDisclosure();
-
-  const {
-    isOpen: isOpenNewFolder,
-    onOpen: onOpenNewFolder,
-    onOpenChange: onOpenChangeNewFolder,
-  } = useDisclosure();
+  const changeView = (view:string) => {
+    if (view == 'billings'){
+      setBillingVisible(true)
+      setUserVisible(false)
+      setRolesVisible(false)
+      setPermissionsVisible(false)
+      setPlansVisible(false)
+    }
+    if (view == 'users'){
+      setBillingVisible(false)
+      setUserVisible(true)
+      setRolesVisible(false)
+      setPermissionsVisible(false)
+      setPlansVisible(false)
+    }
+    if (view == 'roles'){
+      setBillingVisible(false)
+      setUserVisible(false)
+      setRolesVisible(true)
+      setPermissionsVisible(false)
+      setPlansVisible(false)
+    }
+    if (view == 'permissions'){
+      setBillingVisible(false)
+      setUserVisible(false)
+      setRolesVisible(false)
+      setPermissionsVisible(true)
+      setPlansVisible(false)
+    }
+    if (view == 'plans'){
+      setBillingVisible(false)
+      setUserVisible(false)
+      setRolesVisible(false)
+      setPermissionsVisible(false)
+      setPlansVisible(true)
+    }
+  }
 
   return (
-    <div className="relative min-h-screen w-full select-none overflow-hidden">
+    <div className="relative min-h-screen w-full select-none overflow-hidden ">
       <BackgroundImage isLoginPage={false} />
-
-      {/* Drawer Menu - renderizado globalmente */}
-      <DrawerMenu
-        isOpen={isDrawerOpen}
-        onToggle={() => setIsDrawerOpen(!isDrawerOpen)}
-      />
+      <Sidebar isOpen={isOpen} onOpenChange={onOpenChange} changeView={changeView}></Sidebar>
 
       <MainContainer src={main_bg} isLoginPage={false}>
-        <div className="z-10 flex h-full w-full flex-col">
-          {/* Main Content */}
-          <div className="flex h-full flex-col">
-            <TaleniaNavbar
-              isDrawerOpen={isDrawerOpen}
-              onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
-            />
-
-            {/* Welcome Section - Takes available space */}
-            <div className="flex w-full flex-1 flex-col items-center justify-center">
-              <h1 className="text-3xl font-medium text-purple">
-                ¡Bienvenido a TalenIA!
-              </h1>
-              <PrimaryButton
-                label="Nuevo análisis"
-                icon={CgExtensionAdd}
-                className="mt-11"
-                onClick={onOpenNewAnalysis}
-              />
-            </div>
-
-            {/* Folder Section - Fixed height */}
-            <FolderSection
-              userId={userId}
-              onOpenNewFolder={onOpenNewFolder}
-              onRefreshReady={(refreshFn) => {
-                folderRefreshRef.current = refreshFn;
+        <div className="z-20 flex w-full flex-col items-center  justify-between text-darkPurple">
+          <div className="flex h-[60px] w-full items-center gap-5 rounded-lg bg-[#251D3FCC] px-5">
+            <div
+              onClick={() => {
+                onOpenChange()
               }}
-            />
-
-            {/* Footer */}
-            <MainFooter />
+            >
+              <BiMenu color="white" size={20} />
+            </div>
+            <Image width={63} height={16} alt="" src={logo}></Image>
           </div>
+          { billingVisible ? <BillingView></BillingView> :<></>}
+          { userVisible ? <UsersView></UsersView> :<></>}
+          { rolesVisible ? <RolesView></RolesView> : <></>}
+          { permissionsVisible ? <PermissionsView></PermissionsView> : <></>}
+          { plansVisible ? <PlansView></PlansView> : <></>}
+          <MainFooter></MainFooter>
         </div>
       </MainContainer>
-
-      <NewAnalysisModal
-        folderId=""
-        isHomePage
-        isOpen={isOpenNewAnalysis}
-        onClose={() => onOpenChangeNewAnalysis()}
-        onProjectCreated={() => {
-          folderRefreshRef.current?.();
-        }}
-      />
-
-      <NewFolderModal
-        isOpen={isOpenNewFolder}
-        onClose={() => onOpenChangeNewFolder()}
-        onFolderCreated={() => {
-          folderRefreshRef.current?.();
-        }}
-      />
     </div>
   );
 };

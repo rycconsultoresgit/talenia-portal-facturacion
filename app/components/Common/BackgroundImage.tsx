@@ -3,7 +3,7 @@ import login_bg from "./../../assets/login_bg.jpg";
 
 const BackgroundImage = ({ isLoginPage = false }: { isLoginPage: boolean }) => {
   return (
-    <div className="fixed inset-0">
+    <div className="fixed inset-0 w-full">
       <div className="absolute inset-0">
         <Image
           src={login_bg}

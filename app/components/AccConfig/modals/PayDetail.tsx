@@ -7,8 +7,8 @@ interface Detail {
   id: string;
     transaction_type: string;
     user_id: number;
-    detail: string;
-    amount: number;
+    name: string;
+    price: number;
     date: string;
     status: true;
     cvs: number;
@@ -31,7 +31,7 @@ const PayDetail = ({ isOpen, onClose,detail }: Readonly<RoadmapModalProps>) => {
     });
   }
 
-  const total = detail.reduce((acc,pay) => acc + pay.amount , 0)
+  const total = detail.reduce((acc,pay) => acc + pay.price , 0)
   return (
     <Modal
       size="lg"
@@ -58,9 +58,9 @@ const PayDetail = ({ isOpen, onClose,detail }: Readonly<RoadmapModalProps>) => {
                 return <div key={index} className="flex items-center justify-between w-full px-2">
                   <div className="flex items-center gap-2">
                     <p>{pay.date}-</p>
-                  <p>{pay.detail}</p>
+                  <p>{pay.name}</p>
                   </div>
-                  <p>{'$'+moneyParser(pay.amount)}</p>
+                  <p>{'$'+moneyParser(pay.price)}</p>
                 </div>
               })}
             </div>

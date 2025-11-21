@@ -16,7 +16,7 @@ const getBillings = async (user_id:number) : Promise<Billing[]> => {
 
 const getSummaryBillings = async (user_id:number) : Promise<Billing[]> => {
   try {
-    const response = await apiClient.get(`/billings/summary/${user_id}`)
+    const response = await apiClient.get(`/pays/summary/${user_id}`)
     return response.data
   } catch (error) {
     console.log(error);

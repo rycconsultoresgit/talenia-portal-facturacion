@@ -162,6 +162,32 @@ const deleteUser = async (id: number): Promise<void> => {
   }
 };
 
+//Traer a los usuarios
+const getAllUsers = async () => {
+  try {
+    return [
+      {
+        nombre: "Nicolás Cruz",
+        rut: "20249567-2",
+        email: "nickocruz4513@gmail.com",
+        empresa: "RyC Consultores",
+        plan: "Plan Anual",
+        rol: "Cliente",
+      },
+      {
+        nombre: "Nicolás Cruz",
+        rut: "20249567-2",
+        email: "nickocruz4513@gmail.com",
+        empresa: "RyC Consultores",
+        plan: "Plan Anual",
+        rol: "Cliente",
+      },
+    ];
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const userService = {
   registerUser,
   loginUser,
@@ -169,5 +195,5 @@ export const userService = {
   refreshToken,
   updatePassword,
   updateUser,
-  deleteUser,
+  deleteUser,getAllUsers
 };
