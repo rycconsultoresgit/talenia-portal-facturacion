@@ -22,7 +22,7 @@ const PayDetail = ({ isOpen, onClose }: Readonly<RoadmapModalProps>) => {
       }}
     >
       <ModalContent
-        className={`my-10 flex h-fit flex-col gap-5 bg-[url('./assets/fondoRoadmap.png')] bg-cover px-10 py-8 text-darkPurple`}
+        className={`my-10 flex h-fit flex-col gap-5  bg-cover px-10 py-8 text-darkPurple`}
       >
         <div className="flex w-full flex-col items-center justify-center gap-6 ">
           <p className="w-full text-start text-[16px] font-[600] text-[#372AAC]">

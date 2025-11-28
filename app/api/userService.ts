@@ -163,30 +163,35 @@ const deleteUser = async (id: number): Promise<void> => {
 };
 
 //Traer a los usuarios
-const getAllUsers = async () => {
+const getAllUsers = async (params:{page:number,limit:number}) => {
   try {
-    return [
-      {
-        nombre: "Nicolás Cruz",
-        rut: "20249567-2",
-        email: "nickocruz4513@gmail.com",
-        empresa: "RyC Consultores",
-        plan: "Plan Anual",
-        rol: "Cliente",
-      },
-      {
-        nombre: "Nicolás Cruz",
-        rut: "20249567-2",
-        email: "nickocruz4513@gmail.com",
-        empresa: "RyC Consultores",
-        plan: "Plan Anual",
-        rol: "Cliente",
-      },
-    ];
+    const users  = await apiClient.post('/users/all',{params:params})
+    return users.data
   } catch (error) {
     console.log(error);
   }
 };
+
+const getAllRoles = async () => {
+  try {
+    const users  = await apiClient.get('/roles/all',{
+      withCredentials: true,
+    })
+    return users.data
+
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const createNewClient = async (data:any) => {
+  try {
+    const res = await apiClient.post("/users",data)
+    return res
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 export const userService = {
   registerUser,
@@ -195,5 +200,8 @@ export const userService = {
   refreshToken,
   updatePassword,
   updateUser,
-  deleteUser,getAllUsers
+  deleteUser,
+  getAllUsers,
+  getAllRoles,
+  createNewClient
 };

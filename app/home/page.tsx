@@ -11,11 +11,13 @@ import { BiMenu } from "react-icons/bi";
 import BillingView from "../components/Billing/BillingView";
 import logo from "../assets/logo_white.webp";
 import Sidebar from "../components/Billing/Sidebar";
-import UsersView from "../components/Billing/UsersViwe";
+import UsersView from "../components/Billing/UsersView";
 import { useState } from "react";
 import RolesView from "../components/Billing/RolesView";
 import PermissionsView from "../components/Billing/PermissionsView";
 import PlansView from "../components/Billing/PlansView";
+
+import { useRouter } from "next/navigation";
 
 const Home = () => {
   useAuthCheck("/");
@@ -25,6 +27,7 @@ const Home = () => {
   const [rolesVisible, setRolesVisible] = useState(false)
   const [permissionsVisible, setPermissionsVisible] = useState(false)
   const [plansVisible, setPlansVisible] = useState(false)
+  const router = useRouter();
 
   const changeView = (view:string) => {
     if (view == 'billings'){
@@ -79,7 +82,9 @@ const Home = () => {
             >
               <BiMenu color="white" size={20} />
             </div>
-            <Image width={63} height={16} alt="" src={logo}></Image>
+            <div className="hover:cursor-pointer" onClick={()=>{
+              changeView('billings')
+            }}><Image width={63} height={16} alt="" src={logo}></Image></div>
           </div>
           { billingVisible ? <BillingView></BillingView> :<></>}
           { userVisible ? <UsersView></UsersView> :<></>}

@@ -1,16 +1,40 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react";
-import React from "react";
-import { BsCardChecklist } from "react-icons/bs";
+import React, { useState } from "react";
 import { CiMoneyCheck1, CiLock } from "react-icons/ci";
 import { FiSettings } from "react-icons/fi";
 import { LuUsers } from "react-icons/lu";
 import { PiKeyLight } from "react-icons/pi";
 import Image from "next/image";
 import purpleLogo from "../../assets/logo_purple.png";
+import ConfirmationModal from "../Modals/ConfirmationModal";
+import { userService } from "@/app/api/userService";
+import { useRouter } from "next/navigation";
 
 function Sidebar({ isOpen, onOpenChange, changeView }) {
+  const router = useRouter()
+   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+     const handleLogoutConfirmation = async () => {
+    try {
+      await userService.logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
   return (
-    <Drawer
+    <><ConfirmationModal
+        title="¿Cerrar sesión?"
+        description={
+          "Tu sesión actual se cerrará y deberás volver a iniciar sesión para continuar."
+        }
+        primaryLabel="Cerrar sesión"
+        secondaryLabel="Cancelar"
+        isOpen={isLogoutModalOpen}
+        onSecondaryClick={() => setIsLogoutModalOpen(false)}
+        onPrimaryClick={handleLogoutConfirmation}
+      />
+      <Drawer
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       placement="left"
@@ -55,18 +79,9 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
                   className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"
                 >
                   <PiKeyLight color="darkPurple" />
-                  Roles 
+                  Roles y permisos
                 </div>
-                <div
-                  onClick={() => {
-                    changeView("permissions");
-                    onOpenChange()
-                  }}
-                  className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"
-                >
-                  <BsCardChecklist color="darkPurple" />
-                  Permisos
-                </div>
+                
                 <div
                   onClick={() => {
                     changeView("plans");
@@ -80,7 +95,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
               </div>
 
               <div className="flex h-[60px] w-full items-center justify-center rounded-[10px] bg-[#442F8D] text-white">
-                <div className="flex w-full items-center justify-between px-4">
+                <div onClick={()=>{setIsLogoutModalOpen(true)}} className="flex w-full items-center justify-between px-4">
                   <p>Administrador</p> <FiSettings />
                 </div>
               </div>
@@ -91,6 +106,8 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
       </DrawerContent>
       
     </Drawer>
+      </>
+    
   );
 }
 
