@@ -9,8 +9,11 @@ import purpleLogo from "../../assets/logo_purple.png";
 import ConfirmationModal from "../Modals/ConfirmationModal";
 import { userService } from "@/app/api/userService";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
+
 
 function Sidebar({ isOpen, onOpenChange, changeView }) {
+  const { username } = useAuth()
   const router = useRouter()
    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
      const handleLogoutConfirmation = async () => {
@@ -96,7 +99,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
 
               <div className="flex h-[60px] w-full items-center justify-center rounded-[10px] bg-[#442F8D] text-white">
                 <div onClick={()=>{setIsLogoutModalOpen(true)}} className="flex w-full items-center justify-between px-4">
-                  <p>Administrador</p> <FiSettings />
+                  <p>{username}</p> <div className="hover:cursor-pointer"><FiSettings /></div>
                 </div>
               </div>
             </div>

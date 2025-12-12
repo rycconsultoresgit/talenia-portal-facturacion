@@ -1,3 +1,4 @@
+import { userService } from "@/app/api/userService";
 import {
   Modal,
   ModalContent,
@@ -10,13 +11,13 @@ import React from "react";
 import { LiaGrinStars } from "react-icons/lia";
 import {toast} from 'sonner'
 
-function DeleteUserModal({ isOpen, onOpenChange,onClose }) {
+function DeleteUserModal({ user,isOpen, onOpenChange,onClose }) {
   return (
     <Modal size="sm" isOpen={isOpen} onOpenChange={onOpenChange} isDismissable={false}>
       <ModalContent>
         <>
           <ModalHeader className="flex flex-col gap-1 text-[#372AAC]">
-            ¿ Eliminar usuario ?
+            ¿ Eliminar usuario {user?.user_id}?
           </ModalHeader>
           <ModalBody>
             <p className="text-darkPurple text-[14px] font-[300] text-center ">
@@ -29,7 +30,9 @@ function DeleteUserModal({ isOpen, onOpenChange,onClose }) {
             }} className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-black px-4 text-[14px] font-[500] text-white hover:cursor-pointer">
               Cancelar
             </div>
-            <div onClick={()=>{onClose()
+            <div onClick={async ()=>{
+              await userService.deleteUser(user?.user_id)
+              onClose()
               toast("Usuario eliminado con exito", {
                   icon: <LiaGrinStars color="#372AAC" size={16} />,
                   duration: 2000,

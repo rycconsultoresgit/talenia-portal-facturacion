@@ -25,14 +25,15 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
   const [password, setPassword] = useState("");
 
   const plans = [
-    { key: "basico", label: "Basico" },
-    { key: "avanzado", label: "Avanzado" },
-    { key: "pro", label: "Pro" },
+    { key: 4, label: "Demo" },
+    { key: 1, label: "Basico" },
+    { key: 2, label: "Avanzado" },
+    { key: 3, label: "Pro" },
   ];
 
   const roles = [
-    { key: "cliente", label: "Cliente" },
-    { key: "coordinador", label: "Coordinador" },
+    { key: 2, label: "Cliente" },
+    { key: 1, label: "Administrador" },
   ];
 
   //company data
@@ -152,20 +153,10 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
 
     if (validateFields()) {
       //Tomamos la informacion del usuario y lo creamos
-      const rutData = rut.split("-");
-      const newClient = await userService.createNewClient({
-        username: name,
-        password: SHA512(password).toString(),
-        email: email,
-        rut: rutData[0],
-        dv: rutData[1],
-        company_id: company,
-        plan: plan,
-        role: role,
-      });
-
+      const rutData = rut.split("-")
       const companyRutData = companyRut.split("-");
-      //Con la informacion del usuario creado generamos una nueva empresa
+
+      //Primero creariamos la empresa, para asociarsela al usuario
       const newCompany = await companyService.createCompany({
         name: company,
         socialReason: socialReason,
@@ -176,6 +167,45 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
         phone: phone.replace(/\s+/g, ""),
         common: common,
       });
+
+      if(!newCompany){
+        toast("Error al crear la empresa", {
+        icon: <LiaGrinStars color="#372AAC" size={16} />,
+        duration: 2000,
+        style: {
+          background: "#FFFFFF",
+          display: "flex",
+          justifyContent: "start",
+          alignItems: "center",
+          width: "280px",
+        },
+      });
+      }
+
+      //Con los datos de la empresa creamos al usuario
+      await userService.createNewClient({
+        username: name,
+        password: SHA512(password).toString(),
+        email: email,
+        rut: rutData[0],
+        dv: rutData[1],
+        company: newCompany.id,
+        plan: plan,
+        role: role,
+      });
+      
+      toast("Nuevo usuario creado con exito", {
+        icon: <LiaGrinStars color="#372AAC" size={16} />,
+        duration: 2000,
+        style: {
+          background: "#FFFFFF",
+          display: "flex",
+          justifyContent: "start",
+          alignItems: "center",
+          width: "280px",
+        },
+      });
+      onClose()
     } else {
       toast("Complete todos los campos", {
         icon: <MdOutlineDangerous color="#372AAC" size={16} />,

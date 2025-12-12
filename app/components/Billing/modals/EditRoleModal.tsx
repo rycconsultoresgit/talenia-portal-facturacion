@@ -6,48 +6,54 @@ import {
   ModalFooter,
   Checkbox,
 } from "@heroui/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LiaGrinStars } from "react-icons/lia";
 import { IoChevronDownSharp } from "react-icons/io5";
 import { IoChevronUpSharp } from "react-icons/io5";
 import { userService } from "@/app/api/userService";
 
-function NewRoleModal({ isOpen, onOpenChange, onClose }) {
+function EditRoleModal({ rol, isOpen, onOpenChange, onClose }) {
   const [billPermises, setBillPermises] = useState(false);
   const [userPermises, setUserPermises] = useState(false);
   const [securityPermises, setSecurityPermises] = useState(false);
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [permisses, setPermisses] = useState("Default");
+  const [newName, setNewName] = useState(rol?.name);
+  const [newDescription, setNewDescription] = useState(rol?.description);
 
-  const handleCreateRole = async () => {
+  const handleSubmit = async () => {
     try {
-      await userService.createRole({
-        name: name,
-        description: description,
-        permisses: permisses,
-      });
-      toast("Rol creado con exito", {
-        icon: <LiaGrinStars color="#372AAC" size={16} />,
-        duration: 2000,
-        style: {
-          background: "#FFFFFF",
-          display: "flex",
-          justifyContent: "start",
-          alignItems: "center",
-          width: "280px",
-        },
-      });
+      let updateObject = {};
+      if (newName != "" && newName != rol?.name) {
+        updateObject = { ...updateObject, name: newName };
+      }
+      if (newDescription != "" && newDescription != rol?.description) {
+        updateObject = { ...updateObject, description: newDescription };
+      }
+
+      if (Object.keys(updateObject).length != 0) {
+        await userService.updateInfoRole(rol?.id, updateObject);
+        toast("Rol editado con exito", {
+          icon: <LiaGrinStars color="#372AAC" size={16} />,
+          duration: 2000,
+          style: {
+            background: "#FFFFFF",
+            display: "flex",
+            justifyContent: "start",
+            alignItems: "center",
+            width: "280px",
+          },
+        });
+      }
       setBillPermises(false);
       setSecurityPermises(false);
       setUserPermises(false);
-      setName("");
-      setDescription("");
+
+      setNewName("");
+      setNewDescription("");
       onClose();
     } catch (error) {
-      toast("Error al crear el rol", {
+      toast("Error al editar el Rol", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,
         style: {
@@ -60,8 +66,16 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
       });
     }
   };
+
+  useEffect(() => {
+    setNewName(rol?.name)
+    setNewDescription(rol?.description)
+  }, [])
+  
+
   return (
     <Modal
+    key={rol?.id}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       isDismissable={false}
@@ -71,25 +85,27 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
       <ModalContent>
         <>
           <ModalHeader className="flex flex-col gap-1 text-[16px] text-[#372AAC]">
-            Nuevo rol
+            Editar rol
           </ModalHeader>
           <ModalBody className="">
             <div className="flex w-full flex-col gap-2 text-[12px] font-[400] text-darkPurple">
               <div>Nombre del rol</div>
               <input
-                value={name}
+                value={newName}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setNewName(e.target.value);
                 }}
                 className="w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                placeholder={`${rol?.name}`}
               ></input>
               <div>Descripcion de rol</div>
               <input
-                value={description}
+                value={newDescription}
                 onChange={(e) => {
-                  setDescription(e.target.value);
+                  setNewDescription(e.target.value);
                 }}
                 className="w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                placeholder={rol?.description}
               ></input>
             </div>
 
@@ -282,8 +298,8 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
                 setBillPermises(false);
                 setSecurityPermises(false);
                 setUserPermises(false);
-                setName("");
-                setDescription("");
+                setNewName("");
+                setNewDescription("");
                 onClose();
               }}
               className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-black px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
@@ -292,11 +308,11 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
             </div>
             <div
               onClick={() => {
-                handleCreateRole();
+                handleSubmit();
               }}
               className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-gradient-to-r from-[#384DF6] to-[#987EE6] px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
             >
-              Crear
+              Editar
             </div>
           </ModalFooter>
         </>
@@ -305,4 +321,4 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
   );
 }
 
-export default NewRoleModal;
+export default EditRoleModal;

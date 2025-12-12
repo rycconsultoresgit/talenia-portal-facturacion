@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal, ModalContent } from "@heroui/react";
+import { AiOutlineFilePdf } from "react-icons/ai";
 
 interface Detail {
   id: string;
@@ -101,6 +102,7 @@ const PayDetail = ({
             >
               Entendido
             </div>
+            <div><AiOutlineFilePdf/></div>
           </div>
         </div>
       </ModalContent>

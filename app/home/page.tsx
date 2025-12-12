@@ -17,8 +17,6 @@ import RolesView from "../components/Billing/RolesView";
 import PermissionsView from "../components/Billing/PermissionsView";
 import PlansView from "../components/Billing/PlansView";
 
-import { useRouter } from "next/navigation";
-
 const Home = () => {
   useAuthCheck("/");
   const { isOpen, onOpenChange } = useDisclosure();
@@ -27,7 +25,6 @@ const Home = () => {
   const [rolesVisible, setRolesVisible] = useState(false)
   const [permissionsVisible, setPermissionsVisible] = useState(false)
   const [plansVisible, setPlansVisible] = useState(false)
-  const router = useRouter();
 
   const changeView = (view:string) => {
     if (view == 'billings'){
@@ -75,7 +72,7 @@ const Home = () => {
       <MainContainer src={main_bg} isLoginPage={false}>
         <div className="z-20 flex w-full flex-col items-center  justify-between text-darkPurple">
           <div className="flex h-[60px] w-full items-center gap-5 rounded-lg bg-[#251D3FCC] px-5">
-            <div
+            <div className="hover:cursor-pointer"
               onClick={() => {
                 onOpenChange()
               }}

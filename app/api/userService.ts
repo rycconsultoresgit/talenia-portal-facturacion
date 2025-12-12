@@ -163,10 +163,10 @@ const deleteUser = async (id: number): Promise<void> => {
 };
 
 //Traer a los usuarios
-const getAllUsers = async (params:{page:number,limit:number}) => {
+const getAllUsers = async (params: { page: number; limit: number }) => {
   try {
-    const users  = await apiClient.post('/users/all',{params:params})
-    return users.data
+    const users = await apiClient.post("/users/all", { params: params });
+    return users.data;
   } catch (error) {
     console.log(error);
   }
@@ -174,24 +174,63 @@ const getAllUsers = async (params:{page:number,limit:number}) => {
 
 const getAllRoles = async () => {
   try {
-    const users  = await apiClient.get('/roles/all',{
+    const users = await apiClient.get("/roles/all", {
       withCredentials: true,
-    })
-    return users.data
-
+    });
+    return users.data;
   } catch (error) {
     console.log(error);
   }
 };
 
-const createNewClient = async (data:any) => {
+const createRole = async (data: {
+  name?: string;
+  description?: string;
+  permisses?: string;
+}) => {
   try {
-    const res = await apiClient.post("/users",data)
-    return res
+    const role = await apiClient.post("/roles", data);
+    return role.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteRole = async (id: number) => {
+  try {
+    const role = await apiClient.delete(`/roles/${id}`);
+    return role.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const createNewClient = async (data: any) => {
+  try {
+    const res = await apiClient.post("/users", data);
+    return res;
   } catch (error) {
     console.log(error);
   }
-}
+};
+
+const updateInfoClient = async (id: number, data: any) => {
+  try {
+    const res = await apiClient.patch(`/users/update/${id}`, data);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const updateInfoRole = async (id: number, data: any) => {
+  try {
+    const res = await apiClient.patch(`/roles/update/${id}`, data);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const userService = {
   registerUser,
@@ -203,5 +242,9 @@ export const userService = {
   deleteUser,
   getAllUsers,
   getAllRoles,
-  createNewClient
+  createNewClient,
+  createRole,
+  deleteRole,
+  updateInfoClient,
+  updateInfoRole,
 };

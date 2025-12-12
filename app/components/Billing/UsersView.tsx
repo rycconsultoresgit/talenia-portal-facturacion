@@ -1,32 +1,32 @@
 "use client";
 
+import React, { useState } from "react";
+import { BiSearch } from "react-icons/bi";
+import { useUsersAll } from "@/app/api/queries/userService";
 import { Spinner, useDisclosure } from "@heroui/react";
-import React, { useEffect, useState } from "react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { FiEdit3 } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
-import { userService } from "@/app/api/userService";
 import { TbPointFilled } from "react-icons/tb";
 import { IoAddCircleOutline } from "react-icons/io5";
 import NewUserModal from "./modals/NewUserModal";
 import EditUserModal from "./modals/EditUserModal";
 import DeleteUserModal from "./modals/DeleteUserModal";
-import { BiSearch } from "react-icons/bi";
-import { useUsersAll } from "@/app/api/queries/userService";
 
 interface User {
   username: string;
   rut: string;
   email: string;
-  empresa: string;
-  plan: string;
-  rol: string;
+  plan: {name:string};
+  role: {name:string};
+  dv: number;
+  company?: {name:string};
 }
 
 function UsersView() {
+  const LIMIT = 6
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [total, setTotal] = useState(10);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const {
     isOpen: newUserIsOpen,
     onOpenChange: newUserOnOpenChange,
@@ -43,7 +43,11 @@ function UsersView() {
     onClose: deleteUserClose,
   } = useDisclosure();
 
-  const { usersAll,refetch: refetchUsers,totalUsers } = useUsersAll({page:currentPage,limit:3});
+  const {
+    usersAll,
+    refetch: refetchUsers,
+    totalUsers,isLoadingUsers
+  } = useUsersAll({ page: currentPage, limit: LIMIT });
   return (
     <>
       <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF] to-[#D9CEFF] px-5 py-4">
@@ -69,7 +73,7 @@ function UsersView() {
             </div>
           </div>
         </div>
-        {false ? (
+        { isLoadingUsers ? (
           <div className="flex h-[500px] w-full flex-col items-center justify-center gap-2 overflow-scroll rounded-[10px] bg-[#FFFFFF66] px-4 py-4">
             <Spinner></Spinner>
           </div>
@@ -85,7 +89,7 @@ function UsersView() {
               <div className="w-full">Acciones</div>
             </div>
 
-            {usersAll?.slice(0, 7).map((user: User, index) => (
+            {usersAll?.slice(0, 7).map((user: User, index:number) => (
               <div
                 key={index}
                 className="grid h-[50px] w-[1288px] grid-cols-[1.25fr_1fr_1.75fr_1fr_1fr_1fr_1fr] place-items-start items-center gap-4 px-8"
@@ -96,17 +100,20 @@ function UsersView() {
                     {user.username}
                   </p>
                 </div>
-                <div className="w-full">11.111.111-1</div>
+                <div className="w-full">
+                  {user.rut}-{user.dv}
+                </div>
                 <div className="w-full overflow-hidden text-ellipsis text-start">
                   {user.email}
                 </div>
-                <div className="w-full">RyC Consultores</div>
-                <div className="w-full">Plan Basico</div>
-                <div className="w-full">Coordinador</div>
+                <div className="w-full">{user.company.name}</div>
+                <div className="w-full">{user.plan.name}</div>
+                <div className="w-full">{user.role.name}</div>
                 <div className="flex items-center gap-3">
                   <div
                     className="hover:cursor-pointer"
                     onClick={() => {
+                      setEditingUser(user);
                       editUserOnOpenChange();
                     }}
                   >
@@ -115,6 +122,7 @@ function UsersView() {
                   <div
                     className="hover:cursor-pointer"
                     onClick={() => {
+                      setEditingUser(user);
                       deleteUserOnOpenChange();
                     }}
                   >
@@ -126,32 +134,33 @@ function UsersView() {
           </div>
         )}
 
-        {total > 0 ? (
-          <div className="flex w-full items-center justify-end">
-        <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2 text-darkPurple">
-          <div
-            onClick={() => {
-              if (currentPage > 1) {
-                setCurrentPage(currentPage - 1);
-                refetchUsers();
-              }
-            }}
-          >
-            <IoIosArrowBack className="hover:cursor-pointer" />
+        { Math.round(totalUsers / LIMIT ) > 0 ? (
+          <div className="mx-auto flex w-[1288px] items-center justify-end">
+            <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2 text-darkPurple">
+              <div
+                onClick={() => {
+                  if (currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                    refetchUsers();
+                  }
+                }}
+              >
+                <IoIosArrowBack className="hover:cursor-pointer" />
+              </div>
+              {currentPage} de
+              {Math.round(totalUsers / 6)}
+              <div
+                onClick={() => {
+                  if (currentPage < Math.round(totalUsers / 6)) {
+                    setCurrentPage(currentPage + 1);
+                    refetchUsers();
+                  }
+                }}
+              >
+                <IoIosArrowForward className="hover:cursor-pointer" />
+              </div>
+            </div>
           </div>
-          {currentPage} de {Math.round(totalUsers / 3)}
-          <div
-            onClick={() => {
-              if (currentPage < Math.round(totalUsers / 3)) {
-                setCurrentPage(currentPage + 1);
-                refetchUsers();
-              }
-            }}
-          >
-            <IoIosArrowForward className="hover:cursor-pointer" />
-          </div>
-        </div>
-      </div>
         ) : (
           <></>
         )}
@@ -159,17 +168,30 @@ function UsersView() {
       <NewUserModal
         isOpen={newUserIsOpen}
         onOpenChange={newUserOnOpenChange}
-        onClose={newUserClose}
+        onClose={() => {
+          newUserClose();
+          refetchUsers();
+        }}
       ></NewUserModal>
       <EditUserModal
+        user={editingUser}
         isOpen={editUserIsOpen}
         onOpenChange={editUserOnOpenChange}
-        onClose={editUserClose}
+        onClose={() => {
+          editUserClose();
+          setEditingUser(null)
+          refetchUsers();
+        }}
       ></EditUserModal>
       <DeleteUserModal
+        user={editingUser}
         isOpen={deleteUserIsOpen}
         onOpenChange={deleteUserOnOpenChange}
-        onClose={deleteUserClose}
+        onClose={() => {
+          deleteUserClose();
+          setEditingUser(null)
+          refetchUsers();
+        }}
       ></DeleteUserModal>
     </>
   );

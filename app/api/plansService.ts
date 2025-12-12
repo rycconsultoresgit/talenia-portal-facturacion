@@ -11,6 +11,33 @@ const getAllPlans = async () => {
   }
 };
 
+const createNewPlan = async (data:any) =>{
+  try {
+    const res = await apiClient.post('/plans',data)
+    return res.data
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const updatePlan = async (id:number,data:any) => {
+  try {
+    const res = await apiClient.patch(`/plans/${id}`,data)
+    return res.data
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const deletePlan = async (id:number) => {
+  try {
+    const res = await apiClient.delete(`/plans/${id}`)
+    return res.data
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const plansService = {
-  getAllPlans,
+  getAllPlans,createNewPlan,deletePlan,updatePlan
 };

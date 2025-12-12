@@ -4,9 +4,6 @@ import { userService } from "../userService";
 export const useUsersAll = (params: any = {}, queryOptions?: any) => {
   const fetchUsersAll = async () => {
     const res = await userService.getAllUsers(params)
-    console.log(res);
-    
-
     return res;
   };
 
@@ -18,7 +15,8 @@ export const useUsersAll = (params: any = {}, queryOptions?: any) => {
 
   return {
     ...query,
-    usersAll: query?.data,
-    totalUsers: query?.data?.lenght
+    usersAll: query?.data?.data,
+    totalUsers: query?.data?.total,
+    isLoadingUsers: query.isLoading
   };
 };

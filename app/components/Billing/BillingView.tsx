@@ -1,12 +1,14 @@
+import React, { useEffect, useState } from "react";
 import { billingService } from "@/app/api/billingService";
 import { Select, SelectItem, Spinner, useDisclosure } from "@heroui/react";
-import React, { useEffect, useState } from "react";
 import { AiOutlineInfoCircle } from "react-icons/ai";
-import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import PayDetail from "../AccConfig/modals/PayDetail";
 import { IoReloadCircleOutline } from "react-icons/io5";
 import { CiCircleCheck } from "react-icons/ci";
 import { BiSearch } from "react-icons/bi";
+import { useBillingAll } from "@/app/api/queries/billingService";
+import { FiAlertOctagon } from "react-icons/fi";
+import PayDetail from "../AccConfig/modals/PayDetail";
+import StatusSelect from "./StatusSelect";
 
 interface PayDetail {
   id: string;
@@ -19,29 +21,38 @@ interface PayDetail {
   cvs: number;
   user_cvs: number;
 }
-interface Bill {
-  month: string;
-  plan: number;
-  extra: number;
-  total: number;
-  status: boolean;
-  detail: PayDetail[];
-  planCvs: number;
-  extraCvs: number;
-  billingDate: string;
-}
 
 function BillingView() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [total, setTotal] = useState(10);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [changedStatus, setchangedStatus] = useState(0)
+  const [find, setFind] = useState("");
   const {
     isOpen: detailIsOpen,
     onOpenChange: detailOnOpenChange,
     onClose: detailOnClose,
   } = useDisclosure();
-  const [billing, setBilling] = useState([]);
   const [billDetail, setBillDetail] = useState([]);
+  const { billingAll, totalBilling, isLoadingBillings, refetch } =
+    useBillingAll({
+      month: selectedMonth,
+      year: selectedYear,
+      find: find,
+    });
+  const months = [
+    { key: 1, label: "Ene" },
+    { key: 2, label: "Feb" },
+    { key: 3, label: "Mar" },
+    { key: 4, label: "Abr" },
+    { key: 5, label: "May" },
+    { key: 6, label: "Jun" },
+    { key: 7, label: "Jul" },
+    { key: 8, label: "Agu" },
+    { key: 9, label: "Sep" },
+    { key: 10, label: "Oct" },
+    { key: 11, label: "Nov" },
+    { key: 12, label: "Dic" },
+  ];
 
   function moneyParser(value: number): string {
     return value.toLocaleString("es-CL", {
@@ -50,15 +61,20 @@ function BillingView() {
     });
   }
 
+  //Actualiza el estado de todos los pagos
+  const updateStatus = async (pays: any[]): Promise<void> => {
+    Promise.all(
+      pays.map(async (pay) => {
+        await billingService.updateStatus(pay.id);
+      }),
+    );
+    refetch();
+  };
+
   useEffect(() => {
-    const getData = async (user_id: number) => {
-      const data = await billingService.getSummaryBillings(user_id);
-      setIsLoading(false);
-      setBilling(data);
-      setTotal(data.length);
-    };
-    getData(2);
-  }, []);
+    refetch();
+  }, [selectedMonth,changedStatus]);
+
   return (
     <>
       <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF] to-[#D9CEFF] px-5 py-4">
@@ -70,8 +86,12 @@ function BillingView() {
             <div className="flex items-center justify-center gap-2">
               <div className="flex items-center gap-2">
                 <Select
-                aria-label="random"
+                  disallowEmptySelection
+                  aria-label="random"
                   placeholder="Dic"
+                  onSelectionChange={(e) => {
+                    setSelectedMonth(Number(e.currentKey));
+                  }}
                   className="text-[#645790]"
                   classNames={{
                     innerWrapper: "text-[#645790]",
@@ -93,26 +113,15 @@ function BillingView() {
                     label: "text-[#645790]",
                   }}
                 >
-                  {[
-                    "Ene",
-                    "Feb",
-                    "Mar",
-                    "Abr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Ago",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dic",
-                  ].map((month, index) => (
-                    <SelectItem key={index}>{month}</SelectItem>
-                  ))}
+                  {months.map(
+                    (month: { key: number; label: string }, index) => (
+                      <SelectItem key={index}>{month.label}</SelectItem>
+                    ),
+                  )}
                 </Select>
 
                 <Select
-                aria-label="random"
+                  aria-label="random"
                   placeholder="2025"
                   className="text-darkPurple"
                   classNames={{
@@ -137,21 +146,26 @@ function BillingView() {
                 </Select>
               </div>
 
-              <div className="flex h-[32px] w-full items-center gap-2 rounded-[5px] bg-white px-3 focus:outline-none">
+              {/* <div className="flex h-[32px] w-full items-center gap-2 rounded-[5px] bg-white px-3 focus:outline-none">
                 <BiSearch color="#CACCFD" />
                 <input
-                  className="focus:outline-none"
+                  value={find}
+                  onChange={(e) => {
+                    setFind(e.target.value);
+                  }}
+                  className="text-[14px] text-[#333333] focus:outline-none"
                   placeholder="Buscar"
                 ></input>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
-        {isLoading ? (
+        {/*Mostramos el spinner mientras carga*/}
+        {isLoadingBillings ? (
           <div className="flex h-[500px] w-full flex-col items-center justify-center gap-2 overflow-scroll rounded-[10px] bg-[#FFFFFF66] px-4 py-4">
             <Spinner></Spinner>
           </div>
-        ) : (
+        ) : totalBilling > 0 ? (
           <div className="mx-auto flex h-[500px] w-[1288px] min-w-fit flex-col items-center gap-2 rounded-[10px] bg-[#FFFFFF66] py-4">
             <div className="grid h-[50px] w-full min-w-[1286px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] place-items-start items-center rounded-[5px] bg-[#FFFFFF66] px-8 text-[16px] font-[500] text-[#442F8D]">
               <div className="w-full">Cliente</div>
@@ -163,107 +177,58 @@ function BillingView() {
               <div className="w-full">Estado</div>
             </div>
 
-            {billing.map((bill: Bill, index) => (
-              <div
-                key={index}
-                className="grid h-[50px] w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] place-items-start items-center px-8"
-              >
-                <div className="w-full">Nombre</div>
-                <div className="w-full">{bill.month}</div>
-                <div className="w-full">${moneyParser(bill.plan)} CLP</div>
-                <div className="flex w-full">
-                  <div>
-                    {bill.extra > 0
-                      ? "$" + moneyParser(bill.extra) + " CLP"
-                      : "No adquirido"}{" "}
-                  </div>
-                </div>
-                <div className="flex w-full items-center gap-2">
-                  <div>${moneyParser((bill.plan + bill.extra) * 1.19)} CLP</div>
+            {billingAll?.map(
+              (bill: { user: any; months: any[] }, index: number) => (
+                <div key={index} className="w-full">
+                  {bill.months.map((month, index) => {
+                    return (
+                      <div
+                        key={index}
+                        className="grid h-[50px] w-full grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] place-items-start items-center px-8"
+                      >
+                        <div className="w-full">{bill.user}</div>
+                        <div className="w-full">{month.month}</div>
+                        <div className="w-full">
+                          ${moneyParser(month.plan)} CLP
+                        </div>
+                        <div className="flex w-full">
+                          <div>
+                            {month.extra > 0
+                              ? "$" + moneyParser(month.extra) + " CLP"
+                              : "No adquirido"}{" "}
+                          </div>
+                        </div>
+                        <div className="flex w-full items-center gap-2">
+                          <div>
+                            ${moneyParser((month.plan + month.extra) * 1.19)}{" "}
+                            CLP
+                          </div>
 
-                  <div
-                    onClick={() => {
-                      setBillDetail(bill.detail);
-                      detailOnOpenChange();
-                    }}
-                  >
-                    <AiOutlineInfoCircle color="#947CE7" />
-                  </div>
+                          <div
+                            onClick={() => {
+                              setBillDetail(month.detail);
+                              detailOnOpenChange();
+                            }}
+                          >
+                            <AiOutlineInfoCircle color="#947CE7" />
+                          </div>
+                        </div>
+                        <div className="w-full">{month.detail[0].date}</div>
+                        <div>
+                          <StatusSelect detail={month.detail} updateStatus={updateStatus} status={month.status}></StatusSelect>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="w-full">{bill.detail[0].date}</div>
-
-                <div>
-                  <Select
-                    aria-label="meh"
-                    startContent={
-                      bill.detail[0].status ? (
-                        <CiCircleCheck color="green" />
-                      ) : (
-                        <IoReloadCircleOutline color="orange" />
-                      )
-                    }
-                    onChange={(e) => {
-                      console.log(e.target.value);
-                    }}
-                    placeholder={bill.detail[0].status ? "Pagado" : "Pendiente"}
-                    // value={bill.detail[0].status ? "Pagado" : "Pendiente"}
-                    className="text-darkPurple"
-                    classNames={{
-                      innerWrapper: "",
-                      value: "",
-                      base: "bg-[#FFFFFF66] w-[142px] h-[32px] rounded-[5px] text-darkPurple",
-                      helperWrapper: "",
-                      listbox: "bg-white text-darkPurple",
-                      listboxWrapper: "",
-                      mainWrapper: "",
-                      popoverContent:
-                        "bg-white w-[142px] rounded-[5px] p-0 text-darkPurple",
-                      selectorIcon: "",
-                      spinner: "",
-                      trigger:
-                        "bg-[#FFFFFF66] rounded-[5px] data-[hover=true]:bg-[#FFFFFF66] text-[#645790] min-h-[32px] h-[10px] py-0",
-                    }}
-                  >
-                    <SelectItem key={0} aria-label="meh">
-                      Pagado
-                    </SelectItem>
-                    <SelectItem key={1} aria-label="meh">
-                      Pendiente
-                    </SelectItem>
-                  </Select>
-                </div>
-              </div>
-            ))}
-            <div></div>
-          </div>
-        )}
-
-        {total > 0 ? (
-          <div className="mx-auto flex w-[1288px] items-center justify-end">
-            <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2">
-              <div
-                className="hover:cursor-pointer"
-                onClick={() => {
-                  setCurrentPage(currentPage <= 1 ? 1 : currentPage - 1);
-                }}
-              >
-                <IoIosArrowBack />
-              </div>
-              {currentPage} de {total}
-              <div
-                className="hover:cursor-pointer"
-                onClick={() => {
-                  setCurrentPage(
-                    currentPage >= total ? total : currentPage + 1,
-                  );
-                }}
-              >
-                <IoIosArrowForward />
-              </div>
-            </div>
+              ),
+            )}
           </div>
         ) : (
-          <></>
+          <div className="mx-auto flex h-[500px] w-[1288px] min-w-fit flex-col items-center justify-center gap-2 rounded-[10px] bg-[#FFFFFF66] py-4 text-[14px]">
+            <FiAlertOctagon size={24} color="#947CE7" />
+            No hay datos disponibles por el momento
+          </div>
         )}
       </div>
       <PayDetail
