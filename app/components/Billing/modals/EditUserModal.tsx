@@ -1,3 +1,4 @@
+import { plansService } from "@/app/api/plansService";
 import { userService } from "@/app/api/userService";
 import {
   Modal,
@@ -9,53 +10,40 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import React, { useState } from "react";
+import { SHA512 } from "crypto-js";
+import React, { useEffect, useState } from "react";
 import { LiaGrinStars } from "react-icons/lia";
 import { toast } from "sonner";
 
-interface User {
-  username: string;
-  rut: string;
-  email: string;
-  plan: number;
-  rol: number;
-  dv: number;
-  company_id?: string;
-  status: number;
-}
-
 function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
-  const [plan, setPlan] = useState("");
   const [role, setRole] = useState("");
   const [newUserName, setNewUserName] = useState(user?.username);
   const [newEmail, setNewEmail] = useState(user?.email);
   const [newPassword, setNewPassword] = useState("");
   const [newStatus, setnewStatus] = useState(user?.status);
-
-  const plans = [
-    { key: 4, label: "Demo" },
-    { key: 1, label: "Basico" },
-    { key: 2, label: "Avanzado" },
-    { key: 3, label: "Pro" },
-  ];
-
-  const roles = [
-    { key: "cliente", label: "Cliente" },
-    { key: "coordinador", label: "Coordinador" },
-  ];
+  const [plans, setPlans] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   const handleSubmit = async () => {
     try {
       let updateObject = {};
-      if (newUserName != "" && newUserName != user?.username) {
+      if (newUserName && newUserName != "" && newUserName != user?.username) {
         updateObject = { ...updateObject, username: newUserName };
       }
-      if (newEmail != "" && newEmail != user?.email) {
+      if (newEmail && newEmail != "" && newEmail != user?.email) {
         updateObject = { ...updateObject, email: newEmail };
       }
-      if (newStatus != user?.status) {
+      if (newStatus && newStatus != user?.status) {
         updateObject = { ...updateObject, status: newStatus };
       }
+      if (role != String(user?.role.id) && role!= ""){
+        updateObject = { ...updateObject, role: role };
+      }
+      if(newPassword != ""){
+        updateObject = { ...updateObject, password: SHA512(newPassword).toString()}
+      }
+
+      console.log(Object.keys(updateObject).length,updateObject);
       if (Object.keys(updateObject).length != 0) {
         await userService.updateInfoClient(user.user_id, updateObject);
         toast("Usuario editado con exito", {
@@ -87,6 +75,17 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
     }
   };
 
+  useEffect(() => {
+    const getCompanies = async () => {
+      const roles = await userService.getAllRoles();
+      const plans = await plansService.getAllPlans();
+      setPlans([...plans]);
+      setRoles([...roles]);
+    };
+
+    getCompanies();
+  }, []);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -94,13 +93,13 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
       isDismissable={false}
       size="xl"
     >
-      <ModalContent>
+      <ModalContent className="bg-white/85 shadow-lg backdrop-blur-md">
         <>
           <ModalHeader className="flex flex-col gap-1 text-[#372AAC]">
             Editar cliente
           </ModalHeader>
           <ModalBody>
-            <div className="grid w-full grid-cols-2 grid-rows-4 text-[12px] font-[400] text-darkPurple">
+            <div className="grid w-full grid-cols-2 grid-rows-4 text-[12px] font-[400] text-darkPurple ">
               <div className="w-full px-1 py-1">
                 <p>Nombre</p>
                 <input
@@ -116,7 +115,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 <p>Rut</p>
                 <input
                   disabled={true}
-                  className="w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                  className="w-full rounded-[5px] border px-2 py-2 focus:outline-none bg-white"
                   placeholder={`${user?.rut} - ${user?.dv}`}
                 ></input>
               </div>
@@ -135,16 +134,14 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 <p>Empresa</p>
                 <input
                   disabled={true}
-                  className="w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                  className="w-full rounded-[5px] border px-2 py-2 focus:outline-none bg-white"
                   placeholder={user?.company.name}
                 ></input>
               </div>
               <div className="w-full px-1 py-1">
                 <p>Plan</p>
                 <Select
-                  onChange={(e) => {
-                    setPlan(e.target.value);
-                  }}
+                  isDisabled={true}
                   aria-label="random"
                   placeholder="Plan"
                   classNames={{
@@ -163,6 +160,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                   {plans.map((plan) => (
                     <SelectItem
                       key={plan.key}
+                      textValue={plan.name}
                       className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                     >
                       {plan.label}
@@ -175,6 +173,8 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 <Select
                   onChange={(e) => {
                     setRole(e.target.value);
+                    console.log("Valor elegido",e.target.value);
+                    console.log("rol del usuario",user?.role);
                   }}
                   aria-label="random"
                   placeholder="Rol"
@@ -190,12 +190,12 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                     ],
                   }}
                 >
-                  {roles.map((plan) => (
+                  {roles.map((role) => (
                     <SelectItem
-                      key={plan.key}
+                      key={role.id}
                       className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                     >
-                      {plan.label}
+                      {role.name}
                     </SelectItem>
                   ))}
                 </Select>
@@ -223,7 +223,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
               facturación.
             </p>
 
-            <p className="border-t-1 pt-4 text-[#372AAC]">
+            {/* <p className="border-t-1 pt-4 text-[#372AAC]">
               Datos de facturacion
             </p>
             <div className="grid w-full grid-cols-2 grid-rows-3 text-[12px] font-[400] text-darkPurple">
@@ -269,15 +269,15 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                   placeholder={"Campo opcional"}
                 ></input>
               </div>
-            </div>
+            </div> */}
           </ModalBody>
           <ModalFooter>
             <div
               onClick={() => {
-                setNewPassword("")
-                setNewEmail("")
-                setNewUserName("")
-                setnewStatus(user.status)
+                setNewPassword("");
+                setNewEmail("");
+                setNewUserName("");
+                setnewStatus(user.status);
                 onClose();
               }}
               className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-black px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
@@ -286,7 +286,6 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
             </div>
             <div
               onClick={() => {
-                
                 handleSubmit();
               }}
               className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-gradient-to-r from-[#384DF6] to-[#987EE6] px-4 text-[14px] font-[500] text-white hover:cursor-pointer"

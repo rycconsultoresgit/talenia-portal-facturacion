@@ -4,7 +4,11 @@ import { plansService } from "../plansService";
 export const usePlanAll = (params: any = {}, queryOptions?: any) => {
   const fetchPlansAll = async () => {
     const res = await plansService.getAllPlans()
-    return res;
+    if(!res){
+      return []
+    }
+    return res
+    
   };
 
   const query = useQuery<any>({

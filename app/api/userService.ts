@@ -36,7 +36,7 @@ const registerUser = async (userData: CreateUserDto): Promise<User> => {
 };
 
 const loginUser = async (credentials: LoginDto): Promise<AuthResponse> => {
-  const response = await apiClient.post("/users/login", credentials, {
+  const response = await apiClient.post("/users/manager/login", credentials, {
     withCredentials: true,
   });
   return response.data;
@@ -232,6 +232,18 @@ const updateInfoRole = async (id: number, data: any) => {
   }
 };
 
+const getAllCompanies = async () => {
+  try {
+    const res = await apiClient.get('/companies')
+    if(res){
+      return res.data
+    }
+    
+  } catch (error) {
+    console.log("Error al traer las compañias: ", error);
+  }
+}
+
 export const userService = {
   registerUser,
   loginUser,
@@ -246,5 +258,5 @@ export const userService = {
   createRole,
   deleteRole,
   updateInfoClient,
-  updateInfoRole,
+  updateInfoRole,getAllCompanies
 };

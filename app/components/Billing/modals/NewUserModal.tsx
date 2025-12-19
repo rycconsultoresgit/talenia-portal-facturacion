@@ -6,13 +6,14 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LiaGrinStars } from "react-icons/lia";
 import { companyService } from "@/app/api/companyService";
 import { userService } from "@/app/api/userService";
 import { SHA512 } from "crypto-js";
-import { MdOutlineDangerous } from "react-icons/md";
+import { MdOutlineAdd } from "react-icons/md";
+import { plansService } from "@/app/api/plansService";
 
 function NewUserModal({ isOpen, onOpenChange, onClose }) {
   //User data
@@ -23,20 +24,13 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
   const [plan, setPlan] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
-
-  const plans = [
-    { key: 4, label: "Demo" },
-    { key: 1, label: "Basico" },
-    { key: 2, label: "Avanzado" },
-    { key: 3, label: "Pro" },
-  ];
-
-  const roles = [
-    { key: 2, label: "Cliente" },
-    { key: 1, label: "Administrador" },
-  ];
+  const [companies, setCompanies] = useState([]);
+  const [addCompany, setAddCompany] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [roles, setRoles] = useState([]);
 
   //company data
+  const [companyName, setCompanyName] = useState("");
   const [socialReason, setSocialReason] = useState("");
   const [companyRut, setCompanyRut] = useState("");
   const [address, setAddress] = useState("");
@@ -58,6 +52,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     setCommon("");
     setPhone("");
     setBusiness("");
+    setCompanyName("");
     onClose();
   };
 
@@ -81,7 +76,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     return `+569 ${parte1}${parte2 ? " " + parte2 : ""}`;
   };
 
-  const validateRut = (rut:string) => {
+  const validateRut = (rut: string) => {
     if (!rut) return false;
     rut = rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
     if (rut.length < 2) return false;
@@ -91,44 +86,23 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     let suma = 0;
     let multiplo = 2;
     for (let i = cuerpo.length - 1; i >= 0; i--) {
-        suma += parseInt(cuerpo[i], 10) * multiplo;
-        multiplo = multiplo === 7 ? 2 : multiplo + 1;
+      suma += parseInt(cuerpo[i], 10) * multiplo;
+      multiplo = multiplo === 7 ? 2 : multiplo + 1;
     }
     const dvEsperado = 11 - (suma % 11);
     let dvCalculado =
-        dvEsperado === 11 ? "0" :
-        dvEsperado === 10 ? "K" :
-        dvEsperado.toString();
+      dvEsperado === 11 ? "0" : dvEsperado === 10 ? "K" : dvEsperado.toString();
     return dvCalculado === dv;
-}
+  };
 
-  //Validaciones desde el frontend
-  const validateFields = () => {
-    if (socialReason == "") {
-      return false;
-    }
-    if (address == "") {
-      return false;
-    }
-    if (business == "") {
-      return false;
-    }
-    if (phone == "") {
-      return false;
-    }
-    if (common == "") {
-      return false;
-    }
-    if (companyRut == "" || !validateRut(companyRut)) {
-      return false;
-    }
+  const validateUserFields = () => {
     if (name == "") {
       return false;
     }
     if (rut == "" || !validateRut(rut)) {
       return false;
     }
-    if (company == "") {
+    if (company == "" && !addCompany) {
       return false;
     }
     if (email == "") {
@@ -143,72 +117,125 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     if (role == "") {
       return false;
     }
+    return true;
+  };
+
+  const validateComanyFields = () => {
+    if (addCompany) {
+      if (socialReason == "") {
+        return false;
+      }
+      if (address == "") {
+        return false;
+      }
+      if (business == "") {
+        return false;
+      }
+      if (phone == "") {
+        return false;
+      }
+      if (common == "") {
+        return false;
+      }
+      if (companyRut == "" || !validateRut(companyRut)) {
+        return false;
+      }
+      if (companyName == "") {
+        return false;
+      }
+    }
 
     return true;
   };
 
+  const validateFields = () => {
+    return validateUserFields() && validateComanyFields();
+  };
+
+  useEffect(() => {
+    const getCompanies = async () => {
+      const companies = await userService.getAllCompanies();
+      const roles = await userService.getAllRoles();
+      const plans = await plansService.getAllPlans();
+      setCompanies([...companies]);
+      setPlans([...plans]);
+      setRoles([...roles]);
+    };
+
+    getCompanies();
+  }, []);
+
   const handleSubmit = async (e: any) => {
-    //Evitamos el comportamiento por defecto
-    e.preventDefault();
-
-    if (validateFields()) {
-      //Tomamos la informacion del usuario y lo creamos
-      const rutData = rut.split("-")
-      const companyRutData = companyRut.split("-");
-
-      //Primero creariamos la empresa, para asociarsela al usuario
-      const newCompany = await companyService.createCompany({
-        name: company,
-        socialReason: socialReason,
-        address: address,
-        business: business,
-        rut: companyRutData[0],
-        dv: companyRutData[1],
-        phone: phone.replace(/\s+/g, ""),
-        common: common,
-      });
-
-      if(!newCompany){
-        toast("Error al crear la empresa", {
-        icon: <LiaGrinStars color="#372AAC" size={16} />,
-        duration: 2000,
-        style: {
-          background: "#FFFFFF",
-          display: "flex",
-          justifyContent: "start",
-          alignItems: "center",
-          width: "280px",
-        },
-      });
+    try {
+      e.preventDefault();
+      if (validateFields()) {
+        console.log("Creamos usuario con empresa nueva");
+        const rutData = rut.split("-");
+        if (addCompany) {
+          const companyRutData = companyRut.split("-");
+          const newCompany = await companyService.createCompany({
+            name: companyName,
+            socialReason: socialReason,
+            address: address,
+            business: business,
+            rut: companyRutData[0],
+            dv: companyRutData[1],
+            phone: phone.replace(/\s+/g, ""),
+            common: common,
+          });
+          if (!newCompany) {
+            toast("Error al crear la empresa", {
+              icon: <LiaGrinStars color="#372AAC" size={16} />,
+              duration: 2000,
+              style: {
+                background: "#FFFFFF",
+                display: "flex",
+                justifyContent: "start",
+                alignItems: "center",
+                width: "280px",
+              },
+            });
+          }
+          await userService.createNewClient({
+            username: name,
+            password: SHA512(password).toString(),
+            email: email,
+            rut: rutData[0],
+            dv: rutData[1],
+            company: newCompany.id,
+            plan: plan,
+            role: role,
+          });
+        } else {
+          console.log("Creamos usuario con empresa existente");
+          await userService.createNewClient({
+            username: name,
+            password: SHA512(password).toString(),
+            email: email,
+            rut: rutData[0],
+            dv: rutData[1],
+            company: parseInt(company),
+            plan: plan,
+            role: role,
+          });
+        }
+        toast("Nuevo usuario creado con exito", {
+          icon: <LiaGrinStars color="#372AAC" size={16} />,
+          duration: 2000,
+          style: {
+            background: "#FFFFFF",
+            display: "flex",
+            justifyContent: "start",
+            alignItems: "center",
+            width: "280px",
+          },
+        });
+        closeModal();
+        onClose();
       }
-
-      //Con los datos de la empresa creamos al usuario
-      await userService.createNewClient({
-        username: name,
-        password: SHA512(password).toString(),
-        email: email,
-        rut: rutData[0],
-        dv: rutData[1],
-        company: newCompany.id,
-        plan: plan,
-        role: role,
-      });
-      
-      toast("Nuevo usuario creado con exito", {
+    } catch (error) {
+      toast("Ocurrio un fallo al crear el usuario", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
-        duration: 2000,
-        style: {
-          background: "#FFFFFF",
-          display: "flex",
-          justifyContent: "start",
-          alignItems: "center",
-          width: "280px",
-        },
-      });
-      onClose()
-    } else {
-      toast("Complete todos los campos", {
-        icon: <MdOutlineDangerous color="#372AAC" size={16} />,
         duration: 2000,
         style: {
           background: "#FFFFFF",
@@ -227,14 +254,14 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
       onOpenChange={onOpenChange}
       isDismissable={false}
       size="xl"
-      className="min-h-[539px] py-[13px]"
+      className="h-fit min-h-[369px] py-[13px]"
     >
       <ModalContent className="flex items-center bg-white/85 shadow-lg backdrop-blur-md">
         <>
           <ModalHeader className="flex h-[24px] w-[548px] items-center justify-start gap-1 text-[16px] font-[500] text-[#372AAC]">
             Nuevo cliente
           </ModalHeader>
-          <ModalBody className="flex w-[548px] items-center justify-center">
+          <ModalBody className="flex w-[548px] items-center justify-start">
             <form
               className="w-full"
               autoComplete="off"
@@ -274,7 +301,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                 <div className="w-full px-1 py-1">
                   <p>E-mail</p>
                   <input
-                    maxLength={30}
+                    maxLength={50}
                     type="text"
                     name="random"
                     autoComplete="off"
@@ -287,22 +314,24 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                   ></input>
                 </div>
                 <div className="w-full px-1 py-1">
-                  <p>Empresa</p>
+                  <p>Password</p>
                   <input
-                  maxLength={30}
+                    maxLength={30}
                     name="random"
                     autoComplete="off"
                     className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="RyC Consultores"
-                    value={company}
+                    placeholder="********"
+                    value={password}
                     onChange={(e) => {
-                      setCompany(e.target.value);
+                      setPassword(e.target.value);
                     }}
                   ></input>
                 </div>
+
                 <div className="w-full px-1 py-1">
                   <p>Plan</p>
                   <Select
+                  disallowEmptySelection
                     onChange={(e) => {
                       setPlan(e.target.value);
                     }}
@@ -323,10 +352,10 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                   >
                     {plans.map((plan) => (
                       <SelectItem
-                        key={plan.key}
+                        key={plan.id}
                         className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                       >
-                        {plan.label}
+                        {plan.name}
                       </SelectItem>
                     ))}
                   </Select>
@@ -335,6 +364,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                 <div className="w-full px-1 py-1">
                   <p>Rol</p>
                   <Select
+                  disallowEmptySelection
                     onChange={(e) => {
                       setRole(e.target.value);
                     }}
@@ -352,118 +382,173 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                       ],
                     }}
                   >
-                    {roles.map((plan) => (
+                    {roles.map((role) => (
                       <SelectItem
-                        key={plan.key}
+                        key={role.id}
                         className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                       >
-                        {plan.label}
+                        {role.name}
                       </SelectItem>
                     ))}
                   </Select>
                 </div>
+
                 <div className="w-full px-1 py-1">
-                  <p>Password</p>
-                  <input
-                    maxLength={30}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="********"
-                    value={password}
+                  <p>Empresa</p>
+                  <Select
+                    disallowEmptySelection
+                    isDisabled={addCompany}
                     onChange={(e) => {
-                      setPassword(e.target.value);
+                      console.log("Empresa seleccionada: ", e.target.value);
+                      setCompany(e.target.value);
                     }}
-                  ></input>
+                    aria-label="random"
+                    placeholder="Empresa"
+                    classNames={{
+                      base: [" h-[32px] text-[14px] font-[400]"],
+                      trigger: [
+                        "min-h-[0px] h-[32px] rounded-[5px] border bg-white shadow-none",
+                      ],
+
+                      listbox: ["text-darkPurple rounded-[5px] "],
+                      popoverContent: ["rounded-[5px]"],
+                      value: [
+                        "group-data-[has-value=true]:text-[13px] group-data-[has-value=true]:text-darkPurple font-[400] text-[13px]",
+                      ],
+                    }}
+                  >
+                    {companies.map((company) => (
+                      <SelectItem
+                        key={company.id}
+                        className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
+                      >
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
                 </div>
               </div>
 
-              <p className="my-2 text-[#372AAC]">Datos de facturacion</p>
-              <div className="grid w-full grid-cols-2 grid-rows-3 gap-1 text-[12px] font-[400] text-darkPurple">
-                <div className="w-full px-1 py-1">
-                  <p>Razon social</p>
-                  <input
-                    maxLength={30}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="Comercio"
-                    value={socialReason}
-                    onChange={(e) => {
-                      setSocialReason(e.target.value);
-                    }}
-                  ></input>
-                </div>
-                <div className="w-full px-1 py-1">
-                  <p>Rut</p>
-                  <input
-                    maxLength={10}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="XXXXXXXX-X"
-                    value={companyRut}
-                    onChange={(e) => {
-                      setCompanyRut(formatRut(e.target.value));
-                    }}
-                  ></input>
-                </div>
-                <div className="w-full px-1 py-1">
-                  <p>Domicilio</p>
-                  <input
-                    maxLength={30}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="Calle Falsa 123"
-                    value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                    }}
-                  ></input>
-                </div>
-                <div className="w-full px-1 py-1">
-                  <p>Comuna</p>
-                  <input
-                    maxLength={30}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="Providencia"
-                    value={common}
-                    onChange={(e) => {
-                      setCommon(e.target.value);
-                    }}
-                  ></input>
-                </div>
-                <div className="w-full px-1 py-1">
-                  <p>Giro del negocio</p>
-                  <input
-                    maxLength={30}
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="Automotriz"
-                    value={business}
-                    onChange={(e) => {
-                      setBusiness(e.target.value);
-                    }}
-                  ></input>
-                </div>
-                <div className="w-full px-1 py-1">
-                  <p>Celular</p>
-                  <input
-                    name="random"
-                    autoComplete="off"
-                    className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
-                    placeholder="+569 XXXX XXXX"
-                    value={phone}
-                    onChange={(e) => {
-                      setPhone(formatCel(e.target.value));
-                    }}
-                  ></input>
-                </div>
+              <div
+                onClick={() => {
+                  setAddCompany(!addCompany);
+                  setSocialReason("");
+                  setCompanyRut("");
+                  setAddress("");
+                  setCommon("");
+                  setPhone("");
+                  setBusiness("");
+                  setCompany("");
+                }}
+                className="my-2 flex items-center gap-1 text-[#372AAC] hover:cursor-pointer"
+              >
+                <MdOutlineAdd color="#372AAC" />
+                Nueva empresa
               </div>
+              {!addCompany ? (
+                <></>
+              ) : (
+                <div className="grid w-full grid-cols-2 grid-rows-4 gap-1 text-[12px] font-[400] text-darkPurple">
+                  <div className="w-full px-1 py-1">
+                    <p>Nombre</p>
+                    <input
+                      maxLength={30}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="Nombre"
+                      value={companyName}
+                      onChange={(e) => {
+                        setCompanyName(e.target.value);
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Rut</p>
+                    <input
+                      maxLength={10}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="XXXXXXXX-X"
+                      value={companyRut}
+                      onChange={(e) => {
+                        setCompanyRut(formatRut(e.target.value));
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Domicilio</p>
+                    <input
+                      maxLength={30}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="Calle Falsa 123"
+                      value={address}
+                      onChange={(e) => {
+                        setAddress(e.target.value);
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Comuna</p>
+                    <input
+                      maxLength={30}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="Providencia"
+                      value={common}
+                      onChange={(e) => {
+                        setCommon(e.target.value);
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Giro del negocio</p>
+                    <input
+                      maxLength={30}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="Automotriz"
+                      value={business}
+                      onChange={(e) => {
+                        setBusiness(e.target.value);
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Razon social</p>
+                    <input
+                      maxLength={30}
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="Comercio"
+                      value={socialReason}
+                      onChange={(e) => {
+                        setSocialReason(e.target.value);
+                      }}
+                    ></input>
+                  </div>
+                  <div className="w-full px-1 py-1">
+                    <p>Celular</p>
+                    <input
+                      name="random"
+                      autoComplete="off"
+                      className="h-[32px] w-full rounded-[5px] border px-2 py-2 focus:outline-none"
+                      placeholder="+569 XXXX XXXX"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(formatCel(e.target.value));
+                      }}
+                    ></input>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-3 flex h-[32px] items-center justify-end gap-2">
                 <div
                   onClick={() => {
@@ -474,8 +559,9 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                   Cancelar
                 </div>
                 <button
+                  disabled={!validateFields()}
                   type="submit"
-                  className="flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] bg-gradient-to-r from-[#384DF6] to-[#987EE6] px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
+                  className={`flex h-[32px] w-[102px] items-center justify-center gap-2 rounded-[5px] ${!validateFields() ? "bg-gradient-to-r from-[#384DF699] to-[#987EE699]" : "bg-gradient-to-r from-[#384DF6] to-[#987EE6]"} px-4 text-[14px] font-[500] text-white hover:cursor-pointer`}
                 >
                   Crear
                 </button>

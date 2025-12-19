@@ -14,10 +14,10 @@ import {toast} from 'sonner'
 function DeleteUserModal({ user,isOpen, onOpenChange,onClose }) {
   return (
     <Modal size="sm" isOpen={isOpen} onOpenChange={onOpenChange} isDismissable={false}>
-      <ModalContent>
+      <ModalContent className="bg-white/85 shadow-lg backdrop-blur-md">
         <>
           <ModalHeader className="flex flex-col gap-1 text-[#372AAC]">
-            ¿ Eliminar usuario {user?.user_id}?
+            ¿ Eliminar usuario ?
           </ModalHeader>
           <ModalBody>
             <p className="text-darkPurple text-[14px] font-[300] text-center ">

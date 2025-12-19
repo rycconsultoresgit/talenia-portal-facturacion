@@ -5,13 +5,14 @@ import { IoReloadCircleOutline } from "react-icons/io5";
 
 function StatusSelect({ status, updateStatus, detail }) {
   const [state, setState] = useState(status);
+  const [hasChanged, sethasChanged] = useState(false);
 
-  useEffect(() => {
-    const changeStatus = async () => {
-      await updateStatus(detail);
-    };
-    changeStatus();
-  }, [state]);
+  // useEffect(() => {
+  //   const changeStatus = async () => {
+  //     await updateStatus(detail);
+  //   };
+  //   changeStatus();
+  // }, [state]);
 
   return (
     <Select
@@ -24,8 +25,23 @@ function StatusSelect({ status, updateStatus, detail }) {
           <IoReloadCircleOutline color="orange" />
         )
       }
-      onChange={()=>{setState(!state)}}
-      placeholder={ state ? "Pagado" : "Pendiente"}
+      onChange={async (e) => {
+        if (hasChanged) {
+          setState(!state);
+          await updateStatus(detail);
+        } else {
+          sethasChanged(true);
+          if (e.target.value == "0" && !state) {
+            setState(true);
+            await updateStatus(detail);
+          }
+          if (e.target.value == "1" && state) {
+            setState(false);
+            await updateStatus(detail);
+          }
+        }
+      }}
+      placeholder={state ? "Pagado" : "Pendiente"}
       className="text-darkPurple"
       classNames={{
         base: "bg-[#FFFFFF66] w-[142px] h-[32px] rounded-[5px] text-darkPurple",

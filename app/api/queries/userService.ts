@@ -4,7 +4,9 @@ import { userService } from "../userService";
 export const useUsersAll = (params: any = {}, queryOptions?: any) => {
   const fetchUsersAll = async () => {
     const res = await userService.getAllUsers(params)
-    return res;
+    if(!res){
+      return []
+    }return res
   };
 
   const query = useQuery<any>({

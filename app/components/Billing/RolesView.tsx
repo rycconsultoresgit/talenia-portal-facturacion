@@ -41,8 +41,8 @@ function RolesView() {
 
   return (
     <>
-      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF] to-[#D9CEFF] px-5 py-4">
-        <div className="mx-auto flex h-[32px] w-[1288px] items-center justify-between rounded-lg">
+      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF80] to-[#D9CEFF80] px-5 py-4  ">
+        <div className="mx-auto flex h-[32px] w-[1288px] items-center justify-between rounded-lg ">
           <p className="text-[18px] font-[500] text-[#645790]">Roles</p>
           <div className="flex items-center justify-center gap-5">
             {/* <div className="flex items-center justify-center rounded-[5px] bg-white px-2">
@@ -118,13 +118,13 @@ function RolesView() {
             })}
           </div>
         ) : (
-          <div className="mx-auto grid h-[500px] w-[1288px] grid-cols-3 gap-16 rounded-[10px] justify-between py-4 ">
+          <div className="mx-auto grid h-[500px] w-[1288px] grid-cols-4 gap-16 rounded-[10px] justify-between py-4 ">
             {rolesAll?.slice(0, 6).map((role: Role, index: number) => (
               <div
                 key={index}
                 className="flex justify-between h-[138px] w-full flex-col gap-2 rounded-[5px] bg-[#FFFFFF80] px-4 pt-2 pb-4"
               >
-                <p className="border-b-1 border-b-[#FFFFFF] py-2 text-[#372AAC]">
+                <p className="border-b-1 border-b-[#FFFFFFB3] py-2 text-[#372AAC]">
                   {role.name}
                 </p>
                 <p className="text-[14px] font-[300]">{role.description}</p>

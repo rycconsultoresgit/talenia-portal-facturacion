@@ -4,7 +4,10 @@ import { userService } from "../userService";
 export const useRolesAll = (params: any = {}, queryOptions?: any) => {
   const fetchRolesAll = async () => {
     const res = await userService.getAllRoles()
-    return res;
+    if(!res){
+      return []
+    }
+    return res
   };
 
   const query = useQuery<any>({

@@ -77,7 +77,7 @@ function BillingView() {
 
   return (
     <>
-      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF] to-[#D9CEFF] px-5 py-4">
+      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF80] to-[#D9CEFF80] px-5 py-4 ">
         <div className="mx-auto flex h-[32px] w-[1288px] items-center justify-between rounded-lg">
           <p className="text-[18px] font-[500] text-[#645790]">
             Panel de facturacion
@@ -166,8 +166,8 @@ function BillingView() {
             <Spinner></Spinner>
           </div>
         ) : totalBilling > 0 ? (
-          <div className="mx-auto flex h-[500px] w-[1288px] min-w-fit flex-col items-center gap-2 rounded-[10px] bg-[#FFFFFF66] py-4">
-            <div className="grid h-[50px] w-full min-w-[1286px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] place-items-start items-center rounded-[5px] bg-[#FFFFFF66] px-8 text-[16px] font-[500] text-[#442F8D]">
+          <div className="mx-auto flex h-[500px] w-[1288px] min-w-fit flex-col items-center gap-2 rounded-[10px] bg-[#FFFFFF66] py-2 px-2">
+            <div className="grid h-[50px] w-full min-w-[1286px] grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] place-items-start items-center rounded-[5px] bg-[#FFFFFF66] px-8  text-[16px] font-[500] text-[#442F8D]">
               <div className="w-full">Cliente</div>
               <div className="w-full">Mes</div>
               <div className="w-full">Pago plan</div>

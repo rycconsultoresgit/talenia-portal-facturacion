@@ -45,7 +45,7 @@ function PlansView() {
 
   return (
     <>
-      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF] to-[#D9CEFF] px-5 py-4">
+      <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF80] to-[#D9CEFF80] px-5 py-4">
         <div className="mx-auto flex h-[32px] w-[1288px] items-center justify-between rounded-lg">
           <p className="text-[18px] font-[500] text-[#645790]">Planes</p>
           <div className="flex items-center justify-center gap-5">
