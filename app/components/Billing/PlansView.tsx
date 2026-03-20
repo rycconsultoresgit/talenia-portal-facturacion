@@ -2,20 +2,14 @@
 import NewPlanModal from "./modals/NewPlanModal";
 import EditPlanModal from "./modals/EditPlanModal";
 import DeletePlanModal from "./modals/DeletePlanModal";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { Spinner, useDisclosure } from "@heroui/react";
 import { usePlanAll } from "@/app/api/queries/planService";
-
-interface Plan {
-  id: number;
-  name: string;
-  price: number;
-  cvs: number;
-  description:string
-}
+import { permissionsService } from "@/app/api/permissionsService";
+import { Plan } from "@/app/types/plan.types";
 
 function PlansView() {
   const {
@@ -42,6 +36,23 @@ function PlansView() {
       maximumFractionDigits: 0,
     });
   }
+
+  const [permissions, setPermissions] = useState([
+    "Permiso dummy",
+  ]);
+
+  useEffect(() => {
+    const getPermissions = async () => {
+    try {
+      const response = await permissionsService.getAllPermissions();
+      console.log(response);
+      setPermissions(response.data);
+    } catch (error) {
+      console.error("Error al cargar permisos:", error);
+    }
+    };
+    getPermissions();
+  }, []);
 
   return (
     <>
@@ -109,6 +120,7 @@ function PlansView() {
           onNewPlanClose()
           refetch()
         }}
+        permissions={permissions}
       ></NewPlanModal>
       <EditPlanModal
         plan={selectedPlan}
@@ -119,6 +131,7 @@ function PlansView() {
           setSelectedPlan(null);
           refetch();
         }}
+        permissions={permissions}
       ></EditPlanModal>
       <DeletePlanModal
         plan={selectedPlan}

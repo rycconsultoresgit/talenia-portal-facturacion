@@ -38,6 +38,15 @@ const deletePlan = async (id:number) => {
   }
 }
 
+const assignPermissionsToPlan = async (planId: number, permissionIds: number[]) => {
+  try {
+    const res = await apiClient.post(`/plans/${planId}/permissions/assign`, { permissionIds });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const plansService = {
-  getAllPlans,createNewPlan,deletePlan,updatePlan
+  getAllPlans,createNewPlan,deletePlan,updatePlan, assignPermissionsToPlan
 };
