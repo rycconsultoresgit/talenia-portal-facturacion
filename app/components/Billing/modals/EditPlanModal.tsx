@@ -71,6 +71,11 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
       }}
       size="sm"
       className="h-fit min-h-[370px]"
+      backdrop="blur"
+      classNames={{
+        base: "bg-white/80",
+        backdrop: "backdrop-blur-sm"
+      }}
     >
       <ModalContent>
         <ModalHeader>
