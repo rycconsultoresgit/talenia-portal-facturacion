@@ -71,22 +71,24 @@ function PlansView() {
           </div>
         </div>
         {!isLoadingPlans ? (
-          <div className="mx-auto grid h-[500px] w-[1288px] grid-cols-4 gap-10 rounded-[10px] py-2">
+          <div className="mx-auto grid h-[500px] w-[1288px] grid-cols-4 gap-6 rounded-[10px] py-2">
             {plansAll?.slice(0, 6).map((plan: Plan, index: number) => (
               <div
                 key={index}
-                className="flex h-fit min-h-[138px] w-full min-w-[300px] flex-col justify-between gap-2 rounded-[5px] bg-[#FFFFFF80] px-4 py-4"
+                className="flex h-full min-h-[138px] w-full min-w-[300px] flex-col justify-between gap-2 rounded-[5px] bg-[#FFFFFF80] px-4 py-4"
               >
-                <p className="border-b-1 border-b-[#FFFFFF] py-2 text-[#372AAC]">
-                  Plan {plan.name} ({plan.cvs}CV)
-                </p>
-                <p className="text-[14px] font-[300]">
-                  Precio: ${moneyParser(plan.price)}
-                </p>
-                <p>
-                  {plan.description}
-                </p>
-                <div className="flex w-full items-center justify-end gap-2">
+                <div>
+                  <p className="border-b-1 border-b-[#FFFFFF] py-2 text-[#372AAC]">
+                    Plan {plan.name} ({plan.cvs}CV)
+                  </p>
+                  <p className="text-[14px] font-[300] pt-2">
+                    Precio: ${moneyParser(plan.price)}
+                  </p>
+                  <p>
+                    {plan.description}
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-2">
                   <div
                     onClick={() => {
                       setSelectedPlan(plan);
