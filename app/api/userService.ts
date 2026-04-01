@@ -191,6 +191,17 @@ const getAllUsers = async (params: { page: number; limit: number }) => {
   }
 };
 
+const getUserById = async (id: number) => {
+  try {
+    const response = await apiClient.get(`/users/${id}`, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const getAllRoles = async () => {
   try {
     const users = await apiClient.get("/roles/all", {
@@ -277,6 +288,7 @@ export const userService = {
   updateUser,
   deleteUser,
   getAllUsers,
+  getUserById,
   getAllRoles,
   createNewClient,
   createRole,

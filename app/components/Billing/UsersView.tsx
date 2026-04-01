@@ -18,7 +18,7 @@ interface User {
   username: string;
   rut: string;
   email: string;
-  plan?: {name?: string} | null;
+  plan?: {id?: number; name?: string} | null;
   role?: {id:number, name:string} | null;
   dv: number;
   status?: number;
