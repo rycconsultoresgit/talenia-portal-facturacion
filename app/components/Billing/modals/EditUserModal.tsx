@@ -15,14 +15,26 @@ import React, { useEffect, useState } from "react";
 import { LiaGrinStars } from "react-icons/lia";
 import { toast } from "sonner";
 
+type PlanOption = {
+  id?: number;
+  key?: number | string;
+  name?: string;
+  label?: string;
+};
+
+type RoleOption = {
+  id: number;
+  name: string;
+};
+
 function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
   const [role, setRole] = useState("");
   const [newUserName, setNewUserName] = useState(user?.username);
   const [newEmail, setNewEmail] = useState(user?.email);
   const [newPassword, setNewPassword] = useState("");
   const [newStatus, setnewStatus] = useState(user?.status);
-  const [plans, setPlans] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
 
   const handleSubmit = async () => {
     try {
@@ -36,7 +48,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
       if (newStatus && newStatus != user?.status) {
         updateObject = { ...updateObject, status: newStatus };
       }
-      if (role != String(user?.role.id) && role!= ""){
+      if (role != String(user?.role?.id) && role!= ""){
         updateObject = { ...updateObject, role: role };
       }
       if(newPassword != ""){
@@ -60,7 +72,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
       }
 
       onClose();
-    } catch (error) {
+    } catch {
       toast("Error al editar el usuario", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,
@@ -79,8 +91,18 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
     const getCompanies = async () => {
       const roles = await userService.getAllRoles();
       const plans = await plansService.getAllPlans();
-      setPlans([...plans]);
-      setRoles([...roles]);
+      const normalizedPlans = Array.isArray(plans)
+        ? plans
+        : Array.isArray(plans?.data)
+          ? plans.data
+          : [];
+      const normalizedRoles = Array.isArray(roles)
+        ? roles
+        : Array.isArray(roles?.data)
+          ? roles.data
+          : [];
+      setPlans(normalizedPlans);
+      setRoles(normalizedRoles);
     };
 
     getCompanies();
@@ -135,7 +157,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 <input
                   disabled={true}
                   className="w-full rounded-[5px] border px-2 py-2 focus:outline-none bg-white"
-                  placeholder={user?.company.name}
+                  placeholder={user?.company?.name ?? "Sin empresa"}
                 ></input>
               </div>
               <div className="w-full px-1 py-1">
@@ -159,14 +181,17 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 >
                   {plans.map((plan) => (
                     <SelectItem
-                      key={plan.key}
-                      textValue={plan.name}
+                      key={plan.id ?? plan.key}
+                      textValue={plan.name ?? plan.label}
                       className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                     >
-                      {plan.label}
+                      {plan.name ?? plan.label}
                     </SelectItem>
                   ))}
                 </Select>
+                <p className="mt-1 text-[11px] text-[#6E668D]">
+                  {user?.plan?.name ?? "Sin plan"}
+                </p>
               </div>
               <div className="w-full px-1 py-1">
                 <p>Rol</p>

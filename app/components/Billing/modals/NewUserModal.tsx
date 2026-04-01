@@ -6,16 +6,33 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import React, { FormEvent, useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { LiaGrinStars } from "react-icons/lia";
 import { companyService } from "@/app/api/companyService";
 import { userService } from "@/app/api/userService";
 import { SHA512 } from "crypto-js";
 import { MdOutlineAdd } from "react-icons/md";
-import { plansService } from "@/app/api/plansService";
+import { permissionsService } from "@/app/api/permissionsService";
 import { Permission } from "@/app/types/permission.types";
-import { Plan } from "@/app/types/plan.types";
+import { plansService } from "@/app/api/plansService";
+
+type CompanyOption = {
+  id: number;
+  name: string;
+};
+
+type PlanOption = {
+  id: number;
+  name: string;
+};
+
+type RoleOption = {
+  id: number;
+  name: string;
+};
+
+const ADMIN_ROLE_NAME = "Administrador";
 
 function NewUserModal({ isOpen, onOpenChange, onClose }) {
   //User data
@@ -24,19 +41,18 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [plan, setPlan] = useState("");
+  const [lastClientPlan, setLastClientPlan] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [addCompany, setAddCompany] = useState(false);
-  const [plans, setPlans] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>(
-    [],
-  );
+  const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>(
     [],
   );
-  const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
 
   //company data
   const [companyName, setCompanyName] = useState("");
@@ -53,6 +69,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     setEmail("");
     setCompany("");
     setPlan("");
+    setLastClientPlan("");
     setRole("");
     setPassword("");
     setSocialReason("");
@@ -64,7 +81,6 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     setCompanyName("");
     setAvailablePermissions([]);
     setSelectedPermissionIds([]);
-    setIsLoadingPermissions(false);
     onClose();
   };
 
@@ -75,6 +91,16 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
         : [...prev, permissionId],
     );
   };
+
+  const selectedRole = roles.find(
+    (roleOption) => String(roleOption.id) === role,
+  );
+  const isAdministratorRole = selectedRole?.name === ADMIN_ROLE_NAME;
+  const adminPermissions = useMemo(
+    () =>
+      allPermissions.filter((permission) => permission.category === "admin"),
+    [allPermissions],
+  );
 
   const formatRut = (rut: string) => {
     const clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
@@ -131,7 +157,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     if (password == "") {
       return false;
     }
-    if (plan == "") {
+    if (!isAdministratorRole && plan == "") {
       return false;
     }
     if (role == "") {
@@ -177,49 +203,45 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
       const companies = await userService.getAllCompanies();
       const roles = await userService.getAllRoles();
       const plans = await plansService.getAllPlans();
-      setCompanies([...companies]);
-      setPlans([...plans]);
-      setRoles([...roles]);
+      const permissions = await permissionsService.getAllPermissions();
+      setCompanies([...(companies ?? [])]);
+      setPlans([...(plans ?? [])]);
+      setRoles([...(roles ?? [])]);
+      const normalizedPermissions = Array.isArray(permissions)
+        ? permissions
+        : Array.isArray(permissions?.data)
+          ? permissions.data
+          : [];
+      setAllPermissions(normalizedPermissions);
     };
 
     getCompanies();
   }, []);
 
   useEffect(() => {
-    const loadPlanPermissions = async () => {
-      if (!plan) {
-        setAvailablePermissions([]);
-        setSelectedPermissionIds([]);
-        return;
+    if (isAdministratorRole) {
+      if (plan) {
+        setLastClientPlan(plan);
       }
+      setPlan("");
+      setAvailablePermissions(adminPermissions);
+      setSelectedPermissionIds([]);
+      return;
+    }
 
-      try {
-        setIsLoadingPermissions(true);
-        const selectedPlan: Plan = await plansService.getPlanById(Number(plan));
-        const normalizedPermissions: Permission[] = (selectedPlan?.permissions ?? []).map(
-          (permission) => ({
-            id: permission.id,
-            name: permission.name,
-            description: permission.description,
-            category:
-              (permission as Permission & { categiory?: string }).category ??
-              (permission as Permission & { categiory?: string }).categiory ??
-              "",
-          }),
-        );
-        setAvailablePermissions(normalizedPermissions);
-        setSelectedPermissionIds([]);
-      } catch (error) {
-        console.log("Error al cargar permisos del plan:", error);
-        setAvailablePermissions([]);
-        setSelectedPermissionIds([]);
-      } finally {
-        setIsLoadingPermissions(false);
-      }
-    };
+    if (!role) {
+      setAvailablePermissions([]);
+      setSelectedPermissionIds([]);
+      return;
+    }
 
-    loadPlanPermissions();
-  }, [plan]);
+    if (!plan && lastClientPlan) {
+      setPlan(lastClientPlan);
+      return;
+    }
+    setAvailablePermissions([]);
+    setSelectedPermissionIds([]);
+  }, [adminPermissions, isAdministratorRole, lastClientPlan, plan, role]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     try {
@@ -263,7 +285,11 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             role: role,
           });
           const createdUserId = createdUser?.data?.id;
-          if (createdUserId && selectedPermissionIds.length > 0) {
+          if (
+            isAdministratorRole &&
+            createdUserId &&
+            selectedPermissionIds.length > 0
+          ) {
             await userService.assignPermissions(createdUserId, selectedPermissionIds);
           }
         } else {
@@ -279,7 +305,11 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             role: role,
           });
           const createdUserId = createdUser?.data?.id;
-          if (createdUserId && selectedPermissionIds.length > 0) {
+          if (
+            isAdministratorRole &&
+            createdUserId &&
+            selectedPermissionIds.length > 0
+          ) {
             await userService.assignPermissions(createdUserId, selectedPermissionIds);
           }
         }
@@ -395,12 +425,14 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                 <div className="w-full px-1 py-1">
                   <p>Plan</p>
                   <Select
-                  disallowEmptySelection
+                    disallowEmptySelection={!isAdministratorRole}
+                    isDisabled={isAdministratorRole}
                     onChange={(e) => {
                       setPlan(e.target.value);
+                      setLastClientPlan(e.target.value);
                     }}
                     aria-label="random"
-                    placeholder="Plan"
+                    placeholder={isAdministratorRole ? "Sin plan" : "Plan"}
                     classNames={{
                       base: [" h-[32px] text-[14px] font-[400]"],
                       trigger: [
@@ -414,14 +446,23 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                       ],
                     }}
                   >
-                    {plans.map((plan) => (
+                    {isAdministratorRole ? (
+                      <SelectItem
+                        key="sin-plan"
+                        className="rounded-[5px] text-[13px]"
+                      >
+                        Sin plan
+                      </SelectItem>
+                    ) : (
+                      plans.map((plan) => (
                       <SelectItem
                         key={plan.id}
                         className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                       >
                         {plan.name}
                       </SelectItem>
-                    ))}
+                      ))
+                    )}
                   </Select>
                 </div>
 
@@ -616,35 +657,41 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
 
               <div className="mt-3">
                 <p className="text-[14px] font-[500] text-[#251D3F]">Permisos</p>
-                {!plan ? (
+                {!role ? (
                   <p className="mt-2 text-[12px] text-[#6E668D]">
-                    Selecciona un plan para cargar los permisos asignables.
+                    Selecciona un rol para cargar los permisos asignables.
                   </p>
-                ) : isLoadingPermissions ? (
+                ) : isAdministratorRole ? (
+                  availablePermissions.length === 0 ? (
+                    <p className="mt-2 text-[12px] text-[#6E668D]">
+                      No hay permisos de categoría admin disponibles.
+                    </p>
+                  ) : (
+                    <div className="mt-2 grid w-full grid-cols-2 gap-[9px] pl-2">
+                      {availablePermissions.map((permission) => (
+                        <label
+                          key={permission.id}
+                          className="flex items-center gap-2 text-[14px] font-[400] text-[#251D3F]"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedPermissionIds.includes(permission.id)}
+                            onChange={() => handlePermissionToggle(permission.id)}
+                            className="h-[16px] w-[16px] accent-[#372AAC]"
+                          />
+                          <span>{permission.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )
+                ) : !plan ? (
                   <p className="mt-2 text-[12px] text-[#6E668D]">
-                    Cargando permisos del plan...
-                  </p>
-                ) : availablePermissions.length === 0 ? (
-                  <p className="mt-2 text-[12px] text-[#6E668D]">
-                    El plan seleccionado no tiene permisos configurados.
+                    Selecciona un plan para asignar automaticamente sus permisos al cliente.
                   </p>
                 ) : (
-                  <div className="mt-2 grid w-full grid-cols-2 gap-[9px] pl-2">
-                    {availablePermissions.map((permission) => (
-                      <label
-                        key={permission.id}
-                        className="flex items-center gap-2 text-[14px] font-[400] text-[#251D3F]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedPermissionIds.includes(permission.id)}
-                          onChange={() => handlePermissionToggle(permission.id)}
-                          className="h-[16px] w-[16px] accent-[#372AAC]"
-                        />
-                        <span>{permission.name}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <p className="mt-2 text-[12px] text-[#6E668D]">
+                    Este usuario cliente recibira automaticamente todos los permisos asociados al plan seleccionado.
+                  </p>
                 )}
               </div>
 

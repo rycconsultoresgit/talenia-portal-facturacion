@@ -14,13 +14,15 @@ import EditUserModal from "./modals/EditUserModal";
 import DeleteUserModal from "./modals/DeleteUserModal";
 
 interface User {
+  user_id?: number;
   username: string;
   rut: string;
   email: string;
-  plan: {name:string};
-  role: {id:number, name:string};
+  plan?: {name?: string} | null;
+  role?: {id:number, name:string} | null;
   dv: number;
-  company?: {name:string};
+  status?: number;
+  company?: {name?: string} | null;
 }
 
 function UsersView() {
@@ -106,9 +108,11 @@ function UsersView() {
                 <div className="w-full overflow-hidden text-ellipsis text-start">
                   {user.email}
                 </div>
-                <div className="w-full text-nowrap text-ellipsis overflow-hidden">{user.company.name}</div>
-                <div className="w-full">{user.plan.name}</div>
-                <div className="w-full">{user.role.name}</div>
+                <div className="w-full text-nowrap text-ellipsis overflow-hidden">
+                  {user.company?.name ?? "Sin empresa"}
+                </div>
+                <div className="w-full">{user.plan?.name ?? "Sin plan"}</div>
+                <div className="w-full">{user.role?.name ?? "Sin rol"}</div>
                 <div className="flex items-center gap-3">
                   <div
                     className="hover:cursor-pointer"
