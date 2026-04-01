@@ -26,6 +26,7 @@ interface User {
 }
 
 function UsersView() {
+  const formatter = new Intl.NumberFormat("es-CL");
   const LIMIT = 6
   const [currentPage, setCurrentPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -103,7 +104,7 @@ function UsersView() {
                   </p>
                 </div>
                 <div className="w-full">
-                  {user.rut}-{user.dv}
+                  {formatter.format(parseInt(user.rut))}-{user.dv}
                 </div>
                 <div className="w-full overflow-hidden text-ellipsis text-start">
                   {user.email}
