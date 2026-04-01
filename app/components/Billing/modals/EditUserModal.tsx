@@ -239,11 +239,11 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
       className="h-fit w-[580px] max-w-[580px] rounded-[10px] px-[16px] py-[13px]"
     >
       <ModalContent className="w-[580px] max-w-[580px] rounded-[10px] bg-white/70 shadow-lg backdrop-blur-md">
-        <ModalHeader className="flex min-h-[24px] w-full items-center justify-start px-0 py-0 text-[16px] font-[500] text-[#372AAC]">
+        <ModalHeader className="flex min-h-[24px] w-full items-center justify-start px-0 pt-0 text-[16px] font-[500] text-[#372AAC]">
           Editar usuario
         </ModalHeader>
         <ModalBody className="w-full px-0 py-0">
-          <div className="flex w-full flex-col gap-[16px]">
+          <div className="flex w-full flex-col gap-[10px]">
             <div className="grid w-full grid-cols-2 gap-x-[12px] gap-y-[8px] text-[12px] font-[400] text-darkPurple">
               <div className="w-full">
                 <p>Nombre</p>
