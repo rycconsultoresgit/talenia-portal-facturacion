@@ -11,8 +11,13 @@ import { userService } from "@/app/api/userService";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 
+type SidebarProps = {
+  isOpen: boolean;
+  onOpenChange: () => void;
+  changeView?: (view: string) => void;
+};
 
-function Sidebar({ isOpen, onOpenChange, changeView }) {
+function Sidebar({ isOpen, onOpenChange, changeView }: SidebarProps) {
   const { username } = useAuth()
   const router = useRouter()
    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -56,7 +61,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
               <div className="flex w-full flex-col items-start justify-center gap-4 px-[10px]">
                 <div
                   onClick={() => {
-                    changeView("billings");
+                    changeView?.("billings");
                     onOpenChange()
                   }}
                   className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"
@@ -66,7 +71,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
                 </div>
                 <div
                   onClick={() => {
-                    changeView("users");
+                    changeView?.("users");
                     onOpenChange()
                   }}
                   className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"
@@ -76,7 +81,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
                 </div>
                 <div
                   onClick={() => {
-                   changeView("roles");
+                   changeView?.("roles");
                     onOpenChange()
                   }}
                   className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"
@@ -87,7 +92,7 @@ function Sidebar({ isOpen, onOpenChange, changeView }) {
                 
                 <div
                   onClick={() => {
-                    changeView("plans");
+                    changeView?.("plans");
                     onOpenChange()
                   }}
                   className="flex h-[36px] w-full items-center gap-2 rounded-[5px] hover:cursor-pointer hover:bg-white"

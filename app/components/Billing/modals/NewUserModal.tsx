@@ -6,7 +6,7 @@ import {
   Select,
   SelectItem,
 } from "@heroui/react";
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LiaGrinStars } from "react-icons/lia";
 import { companyService } from "@/app/api/companyService";
@@ -14,6 +14,8 @@ import { userService } from "@/app/api/userService";
 import { SHA512 } from "crypto-js";
 import { MdOutlineAdd } from "react-icons/md";
 import { plansService } from "@/app/api/plansService";
+import { Permission } from "@/app/types/permission.types";
+import { Plan } from "@/app/types/plan.types";
 
 function NewUserModal({ isOpen, onOpenChange, onClose }) {
   //User data
@@ -28,6 +30,13 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
   const [addCompany, setAddCompany] = useState(false);
   const [plans, setPlans] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>(
+    [],
+  );
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>(
+    [],
+  );
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
 
   //company data
   const [companyName, setCompanyName] = useState("");
@@ -53,14 +62,25 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     setPhone("");
     setBusiness("");
     setCompanyName("");
+    setAvailablePermissions([]);
+    setSelectedPermissionIds([]);
+    setIsLoadingPermissions(false);
     onClose();
   };
 
+  const handlePermissionToggle = (permissionId: number) => {
+    setSelectedPermissionIds((prev) =>
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId],
+    );
+  };
+
   const formatRut = (rut: string) => {
-    let clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
+    const clean = rut.replace(/[^0-9kK]/g, "").toUpperCase();
     if (clean.length <= 1) return clean;
-    let cuerpo = clean.slice(0, -1);
-    let dv = clean.slice(-1);
+    const cuerpo = clean.slice(0, -1);
+    const dv = clean.slice(-1);
     return `${cuerpo}-${dv}`;
   };
 
@@ -71,8 +91,8 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     if (clean.length <= 4) {
       return `+569 ${clean}`;
     }
-    let parte1 = clean.slice(0, 4);
-    let parte2 = clean.slice(4, 8);
+    const parte1 = clean.slice(0, 4);
+    const parte2 = clean.slice(4, 8);
     return `+569 ${parte1}${parte2 ? " " + parte2 : ""}`;
   };
 
@@ -90,7 +110,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
       multiplo = multiplo === 7 ? 2 : multiplo + 1;
     }
     const dvEsperado = 11 - (suma % 11);
-    let dvCalculado =
+    const dvCalculado =
       dvEsperado === 11 ? "0" : dvEsperado === 10 ? "K" : dvEsperado.toString();
     return dvCalculado === dv;
   };
@@ -165,7 +185,43 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
     getCompanies();
   }, []);
 
-  const handleSubmit = async (e: any) => {
+  useEffect(() => {
+    const loadPlanPermissions = async () => {
+      if (!plan) {
+        setAvailablePermissions([]);
+        setSelectedPermissionIds([]);
+        return;
+      }
+
+      try {
+        setIsLoadingPermissions(true);
+        const selectedPlan: Plan = await plansService.getPlanById(Number(plan));
+        const normalizedPermissions: Permission[] = (selectedPlan?.permissions ?? []).map(
+          (permission) => ({
+            id: permission.id,
+            name: permission.name,
+            description: permission.description,
+            category:
+              (permission as Permission & { categiory?: string }).category ??
+              (permission as Permission & { categiory?: string }).categiory ??
+              "",
+          }),
+        );
+        setAvailablePermissions(normalizedPermissions);
+        setSelectedPermissionIds([]);
+      } catch (error) {
+        console.log("Error al cargar permisos del plan:", error);
+        setAvailablePermissions([]);
+        setSelectedPermissionIds([]);
+      } finally {
+        setIsLoadingPermissions(false);
+      }
+    };
+
+    loadPlanPermissions();
+  }, [plan]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
       if (validateFields()) {
@@ -196,7 +252,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
               },
             });
           }
-          await userService.createNewClient({
+          const createdUser = await userService.createNewClient({
             username: name,
             password: SHA512(password).toString(),
             email: email,
@@ -206,9 +262,13 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             plan: plan,
             role: role,
           });
+          const createdUserId = createdUser?.data?.id;
+          if (createdUserId && selectedPermissionIds.length > 0) {
+            await userService.assignPermissions(createdUserId, selectedPermissionIds);
+          }
         } else {
           console.log("Creamos usuario con empresa existente");
-          await userService.createNewClient({
+          const createdUser = await userService.createNewClient({
             username: name,
             password: SHA512(password).toString(),
             email: email,
@@ -218,6 +278,10 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             plan: plan,
             role: role,
           });
+          const createdUserId = createdUser?.data?.id;
+          if (createdUserId && selectedPermissionIds.length > 0) {
+            await userService.assignPermissions(createdUserId, selectedPermissionIds);
+          }
         }
         toast("Nuevo usuario creado con exito", {
           icon: <LiaGrinStars color="#372AAC" size={16} />,
@@ -233,7 +297,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
         closeModal();
         onClose();
       }
-    } catch (error) {
+    } catch {
       toast("Ocurrio un fallo al crear el usuario", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,
@@ -367,6 +431,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                   disallowEmptySelection
                     onChange={(e) => {
                       setRole(e.target.value);
+                      console.log("Rol seleccionado: ", e.target.value);
                     }}
                     aria-label="random"
                     placeholder="Rol"
@@ -548,6 +613,40 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                   </div>
                 </div>
               )}
+
+              <div className="mt-3">
+                <p className="text-[14px] font-[500] text-[#251D3F]">Permisos</p>
+                {!plan ? (
+                  <p className="mt-2 text-[12px] text-[#6E668D]">
+                    Selecciona un plan para cargar los permisos asignables.
+                  </p>
+                ) : isLoadingPermissions ? (
+                  <p className="mt-2 text-[12px] text-[#6E668D]">
+                    Cargando permisos del plan...
+                  </p>
+                ) : availablePermissions.length === 0 ? (
+                  <p className="mt-2 text-[12px] text-[#6E668D]">
+                    El plan seleccionado no tiene permisos configurados.
+                  </p>
+                ) : (
+                  <div className="mt-2 grid w-full grid-cols-2 gap-[9px] pl-2">
+                    {availablePermissions.map((permission) => (
+                      <label
+                        key={permission.id}
+                        className="flex items-center gap-2 text-[14px] font-[400] text-[#251D3F]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPermissionIds.includes(permission.id)}
+                          onChange={() => handlePermissionToggle(permission.id)}
+                          className="h-[16px] w-[16px] accent-[#372AAC]"
+                        />
+                        <span>{permission.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="mt-3 flex h-[32px] items-center justify-end gap-2">
                 <div

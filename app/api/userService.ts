@@ -9,6 +9,25 @@ import {
 } from "../types/user.types";
 import apiClient from "./config/api-config.api";
 
+type ClientPayload = {
+  username: string;
+  password: string;
+  email: string;
+  rut: string;
+  dv: string;
+  company: number;
+  plan: string;
+  role: string;
+};
+
+type UpdateClientPayload = Partial<ClientPayload>;
+
+type RolePayload = {
+  name?: string;
+  description?: string;
+  permisses?: string;
+};
+
 const registerUser = async (userData: CreateUserDto): Promise<User> => {
   try {
     const response = await apiClient.post("/users", {
@@ -183,11 +202,7 @@ const getAllRoles = async () => {
   }
 };
 
-const createRole = async (data: {
-  name?: string;
-  description?: string;
-  permisses?: string;
-}) => {
+const createRole = async (data: RolePayload) => {
   try {
     const role = await apiClient.post("/roles", data);
     return role.data;
@@ -205,7 +220,7 @@ const deleteRole = async (id: number) => {
   }
 };
 
-const createNewClient = async (data: any) => {
+const createNewClient = async (data: ClientPayload) => {
   try {
     const res = await apiClient.post("/users", data);
     return res;
@@ -214,7 +229,7 @@ const createNewClient = async (data: any) => {
   }
 };
 
-const updateInfoClient = async (id: number, data: any) => {
+const updateInfoClient = async (id: number, data: UpdateClientPayload) => {
   try {
     const res = await apiClient.patch(`/users/update/${id}`, data);
     return res.data;
@@ -223,7 +238,7 @@ const updateInfoClient = async (id: number, data: any) => {
   }
 };
 
-const updateInfoRole = async (id: number, data: any) => {
+const updateInfoRole = async (id: number, data: RolePayload) => {
   try {
     const res = await apiClient.patch(`/roles/update/${id}`, data);
     return res.data;
@@ -244,6 +259,15 @@ const getAllCompanies = async () => {
   }
 }
 
+const assignPermissions = async (userId: number, permissionIds: number[]) => {
+  const response = await apiClient.post(
+    `/users/${userId}/permissions/assign`,
+    { permissionIds },
+    { withCredentials: true },
+  );
+  return response.data;
+};
+
 export const userService = {
   registerUser,
   loginUser,
@@ -258,5 +282,6 @@ export const userService = {
   createRole,
   deleteRole,
   updateInfoClient,
-  updateInfoRole,getAllCompanies
+  updateInfoRole,getAllCompanies,
+  assignPermissions
 };

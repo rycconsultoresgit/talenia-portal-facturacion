@@ -1,6 +1,6 @@
 import { plansService } from "@/app/api/plansService";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
-import React, { useEffect, useState } from "react";
+import React, { FormEvent, useEffect, useState } from "react";
 import { Permission } from "@/app/types/permission.types";
 
 function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
@@ -9,12 +9,18 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
   const [newCvs, setNewCvs] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
+  const clientPermissions = (permissions as Permission[]).filter(
+    (permission) => permission.category === "client",
+  );
 
   console.log("Selected permissions: ", selectedPermissionIds);
 
   useEffect(() => {
     if (isOpen) {
-      const planPermissionIds = plan?.permissions?.map((permission) => permission.id) ?? [];
+      const planPermissionIds =
+        plan?.permissions
+          ?.filter((permission: Permission) => permission.category === "client")
+          .map((permission: Permission) => permission.id) ?? [];
       setSelectedPermissionIds(planPermissionIds);
     }
   }, [isOpen, plan]);
@@ -27,7 +33,7 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
     );
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
       let createObject = {};
@@ -51,9 +57,7 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
         setNewPrice("");
         setNewDescription("");
       }
-      if (selectedPermissionIds.length > 0) {
-        await plansService.assignPermissionsToPlan(plan.id, selectedPermissionIds);
-      }
+      await plansService.assignPermissionsToPlan(plan.id, selectedPermissionIds);
       onClose();
     } catch (error) {
       console.log(error);
@@ -135,7 +139,7 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
                 Permisos
               </p>
               <div className="w-full grid grid-cols-2 gap-[9px] mt-2 pl-2">
-                {permissions.map((permission: Permission) => (
+                {clientPermissions.map((permission: Permission) => (
                   <div key={permission.id} className="flex items-center gap-2">
                     <input
                       type="checkbox"

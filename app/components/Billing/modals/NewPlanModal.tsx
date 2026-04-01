@@ -1,6 +1,6 @@
 import { plansService } from "@/app/api/plansService";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
-import React, { useState } from "react";
+import React, { FormEvent, useState } from "react";
 import { Permission } from "@/app/types/permission.types";
 import { Plan } from "@/app/types/plan.types";
 
@@ -10,6 +10,9 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
   const [cvs, setCvs] = useState("");
   const [description, setDescription] = useState("");
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
+  const clientPermissions = (permissions as Permission[]).filter(
+    (permission) => permission.category === "client",
+  );
 
   const handlePermissionToggle = (permissionId: number) => {
     setSelectedPermissionIds((prev) =>
@@ -19,7 +22,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
     );
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
       const response: Plan = await plansService.createNewPlan({
@@ -28,7 +31,10 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
         cvs: cvs,
         description: description,
       });
-      await plansService.assignPermissionsToPlan(response.id, selectedPermissionIds);
+      await plansService.assignPermissionsToPlan(
+        response.id,
+        selectedPermissionIds,
+      );
       setName("");
       setCvs("");
       setPrice("");
@@ -127,7 +133,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
                 Permisos
               </p>
               <div className="w-full grid grid-cols-2 gap-[9px] mt-2 pl-2">
-                {permissions.map((permission: Permission) => (
+                {clientPermissions.map((permission: Permission) => (
                   <div key={permission.id} className="flex items-center gap-2">
                     <input
                       type="checkbox"
