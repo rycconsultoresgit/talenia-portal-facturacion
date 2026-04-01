@@ -354,7 +354,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
 
             <div className="flex items-center justify-start">
               <Switch
-                defaultSelected={newStatus == 1}
+                defaultSelected={user?.status}
                 onChange={() => {
                   setnewStatus(newStatus == 1 ? 0 : 1);
                 }}
