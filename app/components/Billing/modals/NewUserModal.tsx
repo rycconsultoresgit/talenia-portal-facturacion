@@ -348,14 +348,18 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
       onOpenChange={onOpenChange}
       isDismissable={false}
       size="xl"
-      className="h-fit min-h-[369px] py-[13px]"
+      backdrop="blur"
+      classNames={{
+        base: "bg-white/80",
+        backdrop: "backdrop-blur-sm"
+      }}
+      className="h-fit min-h-[369px] py-[13px] gap-[16px]"
     >
-      <ModalContent className="flex items-center bg-white/85 shadow-lg backdrop-blur-md">
-        <>
-          <ModalHeader className="flex h-[24px] w-[548px] items-center justify-start gap-1 text-[16px] font-[500] text-[#372AAC]">
+      <ModalContent className="w-full items-center">
+          <ModalHeader className="flex h-[24px] w-[548px] items-center justify-start gap-1 text-[16px] font-[500] text-[#372AAC] p-[3]">
             Nuevo cliente
           </ModalHeader>
-          <ModalBody className="flex w-[548px] items-center justify-start">
+          <ModalBody className="flex w-[548px] items-center justify-start p-[-10px]">
             <form
               className="w-full"
               autoComplete="off"
@@ -714,7 +718,6 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
               </div>
             </form>
           </ModalBody>
-        </>
       </ModalContent>
     </Modal>
   );
