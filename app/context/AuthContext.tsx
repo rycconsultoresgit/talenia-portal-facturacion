@@ -2,12 +2,15 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
-  ReactNode,
-  useState,
   useEffect,
+  useState,
+  type ReactNode,
 } from "react";
 import { decode } from "jsonwebtoken";
+import { userService } from "../api/userService";
+import type { AdminPermissionName } from "../constants/permissions";
 import { getCSRFToken } from "../utils/cookies.utils";
 
 interface JwtPayload {
@@ -15,6 +18,7 @@ interface JwtPayload {
     id: number;
     email: string;
     username: string;
+    plan?: number;
   };
   iat: number;
   exp: number;
@@ -24,9 +28,15 @@ interface AuthContextType {
   userId: number | null;
   username: string | null;
   userEmail: string | null;
+  userPlan: number | null;
+  userPermissions: string[];
+  isPermissionsLoading: boolean;
   setUserId: (id: number | null) => void;
   setUsername: (username: string | null) => void;
   setUserEmail: (email: string | null) => void;
+  setUserPlan: (plan: number | null) => void;
+  refreshUserPermissions: () => Promise<void>;
+  hasPermission: (permission: AdminPermissionName) => boolean;
   checkAuth: () => Promise<boolean>;
 }
 
@@ -36,80 +46,111 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<number | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userPlan, setUserPlan] = useState<number | null>(null);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [isPermissionsLoading, setIsPermissionsLoading] = useState(false);
 
-  // Cargar el usuario del token JWT en las cookies al iniciar
-  useEffect(() => {
-    const loadUserFromToken = () => {
-      try {
-        const token = getCSRFToken();
-        if (token) {
-          const decoded = decode(token) as JwtPayload;
-          if (decoded?.userData?.id) {
-            setUsername(decoded.userData.username);
-            setUserId(decoded.userData.id);
-            setUserEmail(decoded.userData.email);
-            return;
-          }
-        }
-        // Si no hay token o es inválido, limpiar el estado
-        setUserId(null);
-        setUsername(null);
-      } catch (error) {
-        console.error("Error al decodificar el token:", error);
-        setUserId(null);
-      }
-    };
-
-    // Cargar el usuario al montar el componente
-    loadUserFromToken();
-
-    // También podrías querer verificar el token periódicamente
-    const interval = setInterval(loadUserFromToken, 5 * 60 * 1000); // Cada 5 minutos
-
-    return () => clearInterval(interval);
+  const clearAuthState = useCallback(() => {
+    setUserId(null);
+    setUsername(null);
+    setUserEmail(null);
+    setUserPlan(null);
+    setUserPermissions([]);
   }, []);
 
-  const handleSetUserId = (id: number | null) => {
-    // No necesitamos guardar el ID en localStorage ya que lo obtenemos del token
-    setUserId(id);
-  };
+  const loadUserPermissions = useCallback(async (id: number) => {
+    setIsPermissionsLoading(true);
+    try {
+      const user = await userService.getUserById(id);
+      const permissionNames = Array.isArray(user?.permissions)
+        ? user.permissions
+            .map((permission) => permission.name)
+            .filter((permissionName): permissionName is string =>
+              Boolean(permissionName),
+            )
+        : [];
 
-  // Función para verificar si el usuario está autenticado basado en el token
-  const checkAuth = async (): Promise<boolean> => {
+      setUserPermissions(permissionNames);
+    } catch (error) {
+      console.error("Error al cargar permisos del usuario:", error);
+      setUserPermissions([]);
+    } finally {
+      setIsPermissionsLoading(false);
+    }
+  }, []);
+
+  const hydrateUserFromToken = useCallback(async (): Promise<boolean> => {
     try {
       const token = getCSRFToken();
       if (!token) {
-        setUserId(null);
+        clearAuthState();
         return false;
       }
 
-      const decoded = decode(token) as JwtPayload;
-      if (!decoded?.exp) {
-        setUserId(null);
+      const decoded = decode(token) as JwtPayload | null;
+      if (!decoded?.userData?.id || !decoded?.exp) {
+        clearAuthState();
         return false;
       }
 
-      // Verificar si el token ha expirado
       const currentTime = Math.floor(Date.now() / 1000);
       const isValid = decoded.exp > currentTime;
 
-      if (isValid && decoded.userData) {
-        setUserId(decoded.userData.id);
-        setUsername(decoded.userData.username);
-        setUserEmail(decoded.userData.email);
-      } else {
-        setUserId(null);
-        setUsername(null);
-        setUserEmail(null);
+      if (!isValid) {
+        clearAuthState();
+        return false;
       }
 
-      return isValid;
+      const { id, username, email, plan } = decoded.userData;
+      setUserId(id);
+      setUsername(username);
+      setUserEmail(email);
+      setUserPlan(plan ?? null);
+      await loadUserPermissions(id);
+
+      return true;
     } catch (error) {
-      console.error("Error al verificar autenticación:", error);
-      setUserId(null);
+      console.error("Error al verificar autenticacion:", error);
+      clearAuthState();
       return false;
     }
-  };
+  }, [clearAuthState, loadUserPermissions]);
+
+  useEffect(() => {
+    const loadUserFromToken = async () => {
+      await hydrateUserFromToken();
+    };
+
+    void loadUserFromToken();
+
+    const interval = setInterval(() => {
+      void loadUserFromToken();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [hydrateUserFromToken]);
+
+  const handleSetUserId = useCallback((id: number | null) => {
+    setUserId(id);
+  }, []);
+
+  const refreshUserPermissions = useCallback(async () => {
+    if (!userId) {
+      setUserPermissions([]);
+      return;
+    }
+
+    await loadUserPermissions(userId);
+  }, [loadUserPermissions, userId]);
+
+  const checkAuth = useCallback(async (): Promise<boolean> => {
+    return hydrateUserFromToken();
+  }, [hydrateUserFromToken]);
+
+  const hasPermission = useCallback(
+    (permission: AdminPermissionName) => userPermissions.includes(permission),
+    [userPermissions],
+  );
 
   return (
     <AuthContext.Provider
@@ -117,9 +158,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         userId,
         username,
         userEmail,
+        userPlan,
+        userPermissions,
+        isPermissionsLoading,
         setUserId: handleSetUserId,
         setUsername,
         setUserEmail,
+        setUserPlan,
+        refreshUserPermissions,
+        hasPermission,
         checkAuth,
       }}
     >

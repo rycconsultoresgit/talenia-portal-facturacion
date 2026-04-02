@@ -234,7 +234,7 @@ const deleteRole = async (id: number) => {
 const createNewClient = async (data: ClientPayload) => {
   try {
     const res = await apiClient.post("/users", data);
-    return res;
+    return res.data;
   } catch (error) {
     console.log(error);
   }

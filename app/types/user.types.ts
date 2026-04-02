@@ -10,6 +10,12 @@ export interface User {
   username: string;
   email: string;
   status: number;
+  permissions?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+    category?: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }

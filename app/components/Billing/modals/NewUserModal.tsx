@@ -284,7 +284,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             plan: plan,
             role: role,
           });
-          const createdUserId = createdUser?.data?.id;
+          const createdUserId = createdUser?.user_id ?? createdUser?.id;
           if (
             isAdministratorRole &&
             createdUserId &&
@@ -304,12 +304,14 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
             plan: plan,
             role: role,
           });
-          const createdUserId = createdUser?.data?.id;
+          const createdUserId = createdUser?.user_id ?? createdUser?.id;
+          console.log(`Condiciones: isAdministratorRole: ${isAdministratorRole}, createdUserId: ${createdUserId}, selectedPermissionIds: ${selectedPermissionIds}`);
           if (
             isAdministratorRole &&
             createdUserId &&
             selectedPermissionIds.length > 0
           ) {
+            console.log("Asignamos permisos al usuario creado: ", selectedPermissionIds);
             await userService.assignPermissions(createdUserId, selectedPermissionIds);
           }
         }
