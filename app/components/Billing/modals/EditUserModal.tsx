@@ -30,6 +30,7 @@ type RoleOption = {
 
 const CLIENT_ROLE_NAME = "Cliente";
 const ADMIN_ROLE_NAME = "Administrador";
+const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
   const [role, setRole] = useState("");
@@ -44,6 +45,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
   const [selectedAdminPermissionIds, setSelectedAdminPermissionIds] = useState<
     number[]
   >([]);
+  const [showErrors, setShowErrors] = useState(false);
 
   const effectiveRoleName = useMemo(() => {
     const selectedRole = roles.find(
@@ -61,12 +63,24 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
     [allPermissions],
   );
 
+  const usernameValid = newUserName.trim().length >= 3;
+  const emailValid = EMAIL_REGEX.test(newEmail.trim());
+  const passwordValid = newPassword.trim() === "" || newPassword.trim().length >= 8;
+
+  const usernameInvalid =
+    (showErrors || newUserName.trim().length > 0) && !usernameValid;
+  const emailInvalid =
+    (showErrors || newEmail.trim().length > 0) && !emailValid;
+  const passwordInvalid =
+    (showErrors || newPassword.trim().length > 0) && !passwordValid;
+
   useEffect(() => {
     setNewUserName(user?.username ?? "");
     setNewEmail(user?.email ?? "");
     setNewPassword("");
     setnewStatus(user?.status);
     setRole("");
+    setShowErrors(false);
   }, [user]);
 
   useEffect(() => {
@@ -160,15 +174,31 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
   };
 
   const handleSubmit = async () => {
+    if (!usernameValid || !emailValid || !passwordValid) {
+      setShowErrors(true);
+      toast("Completa correctamente los campos obligatorios", {
+        icon: <LiaGrinStars color="#372AAC" size={16} />,
+        duration: 2000,
+        style: {
+          background: "#FFFFFF",
+          display: "flex",
+          justifyContent: "start",
+          alignItems: "center",
+          width: "280px",
+        },
+      });
+      return;
+    }
+
     try {
       let updateObject = {};
 
       if (newUserName && newUserName !== user?.username) {
-        updateObject = { ...updateObject, username: newUserName };
+        updateObject = { ...updateObject, username: newUserName.trim() };
       }
 
       if (newEmail && newEmail !== user?.email) {
-        updateObject = { ...updateObject, email: newEmail };
+        updateObject = { ...updateObject, email: newEmail.trim() };
       }
 
       if (newStatus !== undefined && newStatus !== user?.status) {
@@ -248,14 +278,21 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
               <div className="w-full">
                 <p>Nombre</p>
                 <input
-                  className="mt-1 h-[38px] w-full rounded-[6px] border border-transparent bg-white px-3 py-2 text-[14px] text-darkPurple focus:outline-none"
+                  className={inputClassName(usernameInvalid)}
                   placeholder={user?.username}
                   value={newUserName}
                   onChange={(e) => {
                     setNewUserName(e.target.value);
+                    setShowErrors(false);
                   }}
                 />
+                {usernameInvalid ? (
+                  <p className="mt-1 text-[12px] text-[#E5484D]">
+                    Debe tener al menos 3 caracteres.
+                  </p>
+                ) : null}
               </div>
+
               <div className="w-full">
                 <p>Rut</p>
                 <input
@@ -264,22 +301,31 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                   placeholder={`${user?.rut} - ${user?.dv}`}
                 />
               </div>
+
               <div className="w-full">
                 <p>E-mail</p>
                 <input
                   value={newEmail}
                   onChange={(e) => {
                     setNewEmail(e.target.value);
+                    setShowErrors(false);
                   }}
-                  className="mt-1 h-[38px] w-full rounded-[6px] border border-transparent bg-white px-3 py-2 text-[14px] text-darkPurple focus:outline-none"
+                  className={inputClassName(emailInvalid)}
                   placeholder={user?.email}
                 />
+                {emailInvalid ? (
+                  <p className="mt-1 text-[12px] text-[#E5484D]">
+                    Ingresa un e-mail valido.
+                  </p>
+                ) : null}
               </div>
+
               <div className="w-full">
                 <p>Rol</p>
                 <Select
                   onChange={(e) => {
                     setRole(e.target.value);
+                    setShowErrors(false);
                   }}
                   aria-label="random"
                   placeholder="Seleccionar rol"
@@ -295,16 +341,17 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                     ],
                   }}
                 >
-                  {roles.map((role) => (
+                  {roles.map((roleOption) => (
                     <SelectItem
-                      key={role.id}
+                      key={roleOption.id}
                       className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
                     >
-                      {role.name}
+                      {roleOption.name}
                     </SelectItem>
                   ))}
                 </Select>
               </div>
+
               <div className="w-full">
                 <p>Plan</p>
                 <Select
@@ -334,22 +381,29 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                   ))}
                 </Select>
               </div>
+
               <div className="w-full">
                 <p>Contraseña</p>
                 <input
                   value={newPassword}
                   onChange={(e) => {
                     setNewPassword(e.target.value);
+                    setShowErrors(false);
                   }}
-                  className="mt-1 h-[38px] w-full rounded-[6px] border border-transparent bg-white px-3 py-2 text-[14px] text-darkPurple focus:outline-none"
+                  className={inputClassName(passwordInvalid)}
                   placeholder="********"
                 />
+                {passwordInvalid ? (
+                  <p className="mt-1 text-[12px] text-[#E5484D]">
+                    La contraseña debe tener al menos 8 caracteres.
+                  </p>
+                ) : null}
               </div>
             </div>
 
             <p className="text-[14px] text-[#947CE7]">
-              *El cambio de plan se hará efectivo al comenzar la próxima
-              facturación.
+              *El cambio de plan se hara efectivo al comenzar la proxima
+              facturacion.
             </p>
 
             <div className="flex items-center justify-start">
@@ -440,6 +494,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                   setNewEmail(user?.email ?? "");
                   setNewUserName(user?.username ?? "");
                   setnewStatus(user?.status);
+                  setShowErrors(false);
                   onClose();
                 }}
                 className="flex h-[40px] min-w-[124px] items-center justify-center rounded-[6px] bg-[#241B3C] px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
@@ -447,9 +502,7 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
                 Cancelar
               </div>
               <div
-                onClick={() => {
-                  handleSubmit();
-                }}
+                onClick={handleSubmit}
                 className="flex h-[40px] min-w-[124px] items-center justify-center rounded-[6px] bg-gradient-to-r from-[#384DF6] to-[#987EE6] px-4 text-[14px] font-[500] text-white hover:cursor-pointer"
               >
                 Guardar
@@ -460,6 +513,12 @@ function EditUserModal({ user, isOpen, onOpenChange, onClose }) {
       </ModalContent>
     </Modal>
   );
+}
+
+function inputClassName(hasError: boolean) {
+  return `mt-1 h-[38px] w-full rounded-[6px] border bg-white px-3 py-2 text-[14px] text-darkPurple focus:outline-none ${
+    hasError ? "border-[#E5484D]" : "border-transparent"
+  }`;
 }
 
 export default EditUserModal;
