@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "../userService";
 
-export const useUsersAll = (params: any = {}, queryOptions?: any) => {
+type PaginationParams = { page?: number; limit?: number };
+type QueryOptions = Record<string, unknown>;
+
+export const useUsersAll = (
+  params: PaginationParams = {},
+  queryOptions?: QueryOptions,
+) => {
   const fetchUsersAll = async () => {
     const res = await userService.getAllUsers(params)
     if(!res){
@@ -9,8 +15,8 @@ export const useUsersAll = (params: any = {}, queryOptions?: any) => {
     }return res
   };
 
-  const query = useQuery<any>({
-    queryKey: ["users"],
+  const query = useQuery({
+    queryKey: ["users", params],
     queryFn: fetchUsersAll,
     ...queryOptions,
   });

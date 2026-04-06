@@ -21,9 +21,15 @@ const getSummaryBillings = async (user_id: number): Promise<Billing[]> => {
   }
 };
 
-const getAllSummaryBillings = async (filters?:{month?:number,year?:number,find?:string}): Promise<Billing[]> => {
+const getAllSummaryBillings = async (
+  filters?: { month?: number; year?: number; find?: string },
+  params?: { page?: number; limit?: number },
+): Promise<{ data: Billing[]; total: number }> => {
   try {
-    const response = await apiClient.post(`pays/summary/all`,filters);
+    const response = await apiClient.post(`pays/summary/all`, {
+      filters,
+      params,
+    });
     return response.data;
   } catch (error) {
     console.log(error);
@@ -35,7 +41,7 @@ const updateStatus = async (id: number) => {
   try {
     const response = await apiClient.patch(`pays/changeStatus/${id}`);
     return response.data;
-  } catch (error) {
+  } catch {
     console.log("Ocurrio un error al actualizar el estado de pago");
   }
 };

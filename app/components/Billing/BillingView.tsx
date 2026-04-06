@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { billingService } from "@/app/api/billingService";
 import { Select, SelectItem, Spinner, useDisclosure } from "@heroui/react";
 import { AiOutlineInfoCircle } from "react-icons/ai";
-import { IoReloadCircleOutline } from "react-icons/io5";
-import { CiCircleCheck } from "react-icons/ci";
-import { BiSearch } from "react-icons/bi";
 import { useBillingAll } from "@/app/api/queries/billingService";
 import { FiAlertOctagon } from "react-icons/fi";
 import PayDetail from "../AccConfig/modals/PayDetail";
 import StatusSelect from "./StatusSelect";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 interface PayDetail {
   id: string;
@@ -22,36 +20,61 @@ interface PayDetail {
   user_cvs: number;
 }
 
+interface BillingMonth {
+  month: string;
+  plan: number;
+  extra: number;
+  status: boolean;
+  detail: PayDetail[];
+}
+
+interface BillingGroup {
+  user: string;
+  months: BillingMonth[];
+}
+
 function BillingView() {
+  const LIMIT = 6;
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [changedStatus, setchangedStatus] = useState(0)
-  const [find, setFind] = useState("");
+  const [selectedYear] = useState(new Date().getFullYear());
+  const [find] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     isOpen: detailIsOpen,
     onOpenChange: detailOnOpenChange,
     onClose: detailOnClose,
   } = useDisclosure();
-  const [billDetail, setBillDetail] = useState([]);
+  const [billDetail, setBillDetail] = useState<PayDetail[]>([]);
   const { billingAll, totalBilling, isLoadingBillings, refetch } =
-    useBillingAll({
-      month: selectedMonth,
-      year: selectedYear,
-      find: find,
-    });
+    useBillingAll(
+      {
+        month: selectedMonth,
+        year: selectedYear,
+        find: find,
+      },
+      {
+        page: currentPage,
+        limit: LIMIT,
+      },
+    );
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil((totalBilling ?? 0) / LIMIT)),
+    [totalBilling],
+  );
   const months = [
-    { key: 1, label: "Ene" },
-    { key: 2, label: "Feb" },
-    { key: 3, label: "Mar" },
-    { key: 4, label: "Abr" },
-    { key: 5, label: "May" },
-    { key: 6, label: "Jun" },
-    { key: 7, label: "Jul" },
-    { key: 8, label: "Agu" },
-    { key: 9, label: "Sep" },
-    { key: 10, label: "Oct" },
-    { key: 11, label: "Nov" },
-    { key: 12, label: "Dic" },
+    { key: 0, label: "Ene" },
+    { key: 1, label: "Feb" },
+    { key: 2, label: "Mar" },
+    { key: 3, label: "Abr" },
+    { key: 4, label: "May" },
+    { key: 5, label: "Jun" },
+    { key: 6, label: "Jul" },
+    { key: 7, label: "Agu" },
+    { key: 8, label: "Sep" },
+    { key: 9, label: "Oct" },
+    { key: 10, label: "Nov" },
+    { key: 11, label: "Dic" },
   ];
 
   function moneyParser(value: number): string {
@@ -62,8 +85,10 @@ function BillingView() {
   }
 
   //Actualiza el estado de todos los pagos
-  const updateStatus = async (pays: any[]): Promise<void> => {
-    Promise.all(
+  const updateStatus = async (
+    pays: Array<{ id: number }>,
+  ): Promise<void> => {
+    await Promise.all(
       pays.map(async (pay) => {
         await billingService.updateStatus(pay.id);
       }),
@@ -72,8 +97,8 @@ function BillingView() {
   };
 
   useEffect(() => {
-    refetch();
-  }, [selectedMonth,changedStatus]);
+    setCurrentPage(1);
+  }, [selectedMonth, selectedYear]);
 
   return (
     <>
@@ -114,8 +139,8 @@ function BillingView() {
                   }}
                 >
                   {months.map(
-                    (month: { key: number; label: string }, index) => (
-                      <SelectItem key={index}>{month.label}</SelectItem>
+                    (month: { key: number; label: string }) => (
+                      <SelectItem key={month.key}>{month.label}</SelectItem>
                     ),
                   )}
                 </Select>
@@ -140,8 +165,8 @@ function BillingView() {
                       "bg-[#FFFFFF66] rounded-[5px] data-[hover=true]:bg-[#FFFFFF66] text-[#645790] min-h-[32px] h-[10px] py-0",
                   }}
                 >
-                  {["2025"].map((month, index) => (
-                    <SelectItem key={index}>{month}</SelectItem>
+                  {["2025"].map((month) => (
+                    <SelectItem key={month}>{month}</SelectItem>
                   ))}
                 </Select>
               </div>
@@ -178,9 +203,9 @@ function BillingView() {
             </div>
 
             {billingAll?.map(
-              (bill: { user: any; months: any[] }, index: number) => (
+              (bill: BillingGroup, index: number) => (
                 <div key={index} className="w-full">
-                  {bill.months.map((month, index) => {
+                  {bill.months.map((month: BillingMonth, index: number) => {
                     return (
                       <div
                         key={index}
@@ -215,7 +240,11 @@ function BillingView() {
                         </div>
                         <div className="w-full">{month.detail[0].date}</div>
                         <div>
-                          <StatusSelect detail={month.detail} updateStatus={updateStatus} status={month.status}></StatusSelect>
+                          <StatusSelect
+                            detail={month.detail}
+                            updateStatus={updateStatus}
+                            status={month.status}
+                          ></StatusSelect>
                         </div>
                       </div>
                     );
@@ -228,6 +257,31 @@ function BillingView() {
           <div className="mx-auto flex h-[500px] w-[1288px] min-w-fit flex-col items-center justify-center gap-2 rounded-[10px] bg-[#FFFFFF66] py-4 text-[14px]">
             <FiAlertOctagon size={24} color="#947CE7" />
             No hay datos disponibles por el momento
+          </div>
+        )}
+        {totalBilling > 0 && (
+          <div className="mx-auto flex w-[1288px] items-center justify-end">
+            <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2 text-darkPurple">
+              <div
+                onClick={() => {
+                  if (currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                  }
+                }}
+              >
+                <IoIosArrowBack className="hover:cursor-pointer" />
+              </div>
+              {currentPage} de {totalPages}
+              <div
+                onClick={() => {
+                  if (currentPage < totalPages) {
+                    setCurrentPage(currentPage + 1);
+                  }
+                }}
+              >
+                <IoIosArrowForward className="hover:cursor-pointer" />
+              </div>
+            </div>
           </div>
         )}
       </div>

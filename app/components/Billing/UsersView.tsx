@@ -27,7 +27,7 @@ interface User {
 
 function UsersView() {
   const formatter = new Intl.NumberFormat("es-CL");
-  const LIMIT = 6
+  const LIMIT = 6;
   const [currentPage, setCurrentPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const {
@@ -49,8 +49,11 @@ function UsersView() {
   const {
     usersAll,
     refetch: refetchUsers,
-    totalUsers,isLoadingUsers
+    totalUsers,
+    isLoadingUsers,
   } = useUsersAll({ page: currentPage, limit: LIMIT });
+  const totalPages = Math.max(1, Math.ceil((totalUsers ?? 0) / LIMIT));
+
   return (
     <>
       <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF80] to-[#D9CEFF80] px-5 py-4">
@@ -92,7 +95,7 @@ function UsersView() {
               <div className="w-full">Acciones</div>
             </div>
 
-            {usersAll?.slice(0, 7).map((user: User, index:number) => (
+            {usersAll?.map((user: User, index:number) => (
               <div
                 key={index}
                 className="grid h-[50px] w-[1288px] grid-cols-[1.25fr_1fr_1.75fr_1.3fr_0.7fr_1fr_1fr] place-items-start items-center gap-4 px-8"
@@ -139,26 +142,23 @@ function UsersView() {
           </div>
         )}
 
-        { Math.round(totalUsers / LIMIT ) > 0 ? (
+        {totalUsers > 0 ? (
           <div className="mx-auto flex w-[1288px] items-center justify-end">
             <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2 text-darkPurple">
               <div
                 onClick={() => {
                   if (currentPage > 1) {
                     setCurrentPage(currentPage - 1);
-                    refetchUsers();
                   }
                 }}
               >
                 <IoIosArrowBack className="hover:cursor-pointer" />
               </div>
-              {currentPage} de
-              {Math.round(totalUsers / 6)}
+              {currentPage} de {totalPages}
               <div
                 onClick={() => {
-                  if (currentPage < Math.round(totalUsers / 6)) {
+                  if (currentPage < totalPages) {
                     setCurrentPage(currentPage + 1);
-                    refetchUsers();
                   }
                 }}
               >
