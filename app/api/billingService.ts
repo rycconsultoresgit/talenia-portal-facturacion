@@ -37,9 +37,11 @@ const getAllSummaryBillings = async (
 };
 
 //Llamado a funcion de cambio de status
-const updateStatus = async (id: number) => {
+const updateStatus = async (id: number, status: boolean) => {
   try {
-    const response = await apiClient.patch(`pays/changeStatus/${id}`);
+    const response = await apiClient.patch(`pays/changeStatus/${id}`, {
+      status,
+    });
     return response.data;
   } catch {
     console.log("Ocurrio un error al actualizar el estado de pago");

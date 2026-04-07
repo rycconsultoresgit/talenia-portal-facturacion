@@ -15,7 +15,7 @@ interface PayDetail {
   detail: string;
   amount: number;
   date: string;
-  status: true;
+  status: boolean;
   cvs: number;
   user_cvs: number;
 }
@@ -87,10 +87,11 @@ function BillingView() {
   //Actualiza el estado de todos los pagos
   const updateStatus = async (
     pays: Array<{ id: number }>,
+    status: boolean,
   ): Promise<void> => {
     await Promise.all(
       pays.map(async (pay) => {
-        await billingService.updateStatus(pay.id);
+        await billingService.updateStatus(pay.id, status);
       }),
     );
     refetch();
