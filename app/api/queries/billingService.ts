@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { billingService } from "../billingService";
+import type { BillingGroup } from "@/app/types/billing.types";
 
 type BillingFilters = { month?: number; year?: number; find?: string };
 type PaginationParams = { page?: number; limit?: number };
@@ -23,7 +24,7 @@ export const useBillingAll = (
 
   return {
     ...query ,
-    billingAll: query?.data?.data ?? [],
+    billingAll: (query?.data?.data ?? []) as BillingGroup[],
     totalBilling: query?.data?.total ?? 0,
     isLoadingBillings: query.isLoading
   };

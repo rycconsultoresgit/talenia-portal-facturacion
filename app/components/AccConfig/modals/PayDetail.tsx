@@ -5,22 +5,11 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useRef } from "react";
 import { BsDownload } from "react-icons/bs";
-
-interface Detail {
-  id: string;
-  transaction_type: string;
-  user_id: number;
-  name: string;
-  price: number;
-  date: string;
-  status: true;
-  cvs: number;
-  user_cvs: number;
-}
+import type { BillingPayDetail } from "@/app/types/billing.types";
 interface RoadmapModalProps {
   isOpen: boolean;
   onClose: () => void;
-  detail: Detail[];
+  detail: BillingPayDetail[];
 }
 
 const PayDetail = ({
@@ -76,7 +65,7 @@ const PayDetail = ({
 
             <div className="w-full rounded-[7px] bg-[#FFFFFF4D] px-1 py-4">
               <div>
-                {detail.map((pay: any, index: number) => {
+                {detail.map((pay: BillingPayDetail, index: number) => {
                   return (
                     <div
                       key={index}

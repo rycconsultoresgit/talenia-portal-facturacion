@@ -1,4 +1,4 @@
-import { Billing } from "../types/billing.types";
+import { Billing, BillingGroup } from "../types/billing.types";
 import apiClient from "./config/api-config.api";
 
 const getBillings = async (user_id: number): Promise<Billing[]> => {
@@ -24,7 +24,7 @@ const getSummaryBillings = async (user_id: number): Promise<Billing[]> => {
 const getAllSummaryBillings = async (
   filters?: { month?: number; year?: number; find?: string },
   params?: { page?: number; limit?: number },
-): Promise<{ data: Billing[]; total: number }> => {
+): Promise<{ data: BillingGroup[]; total: number }> => {
   try {
     const response = await apiClient.post(`pays/summary/all`, {
       filters,

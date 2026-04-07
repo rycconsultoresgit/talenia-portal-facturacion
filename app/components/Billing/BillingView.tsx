@@ -7,31 +7,11 @@ import { FiAlertOctagon } from "react-icons/fi";
 import PayDetail from "../AccConfig/modals/PayDetail";
 import StatusSelect from "./StatusSelect";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-
-interface PayDetail {
-  id: string;
-  transaction_type: string;
-  user_id: number;
-  detail: string;
-  amount: number;
-  date: string;
-  status: boolean;
-  cvs: number;
-  user_cvs: number;
-}
-
-interface BillingMonth {
-  month: string;
-  plan: number;
-  extra: number;
-  status: boolean;
-  detail: PayDetail[];
-}
-
-interface BillingGroup {
-  user: string;
-  months: BillingMonth[];
-}
+import type {
+  BillingGroup,
+  BillingMonth,
+  BillingPayDetail,
+} from "@/app/types/billing.types";
 
 function BillingView() {
   const LIMIT = 6;
@@ -44,7 +24,7 @@ function BillingView() {
     onOpenChange: detailOnOpenChange,
     onClose: detailOnClose,
   } = useDisclosure();
-  const [billDetail, setBillDetail] = useState<PayDetail[]>([]);
+  const [billDetail, setBillDetail] = useState<BillingPayDetail[]>([]);
   const { billingAll, totalBilling, isLoadingBillings, refetch } =
     useBillingAll(
       {

@@ -22,6 +22,31 @@ export interface BillingResponse {
   totalPages: number;
 }
 
+export interface BillingPayDetail {
+  id: string;
+  transaction_type: string;
+  user_id: number;
+  name: string;
+  price: number;
+  date: string;
+  status: boolean;
+  cvs: number;
+  user_cvs: number;
+}
+
+export interface BillingMonth {
+  month: string;
+  plan: number;
+  extra: number;
+  status: boolean;
+  detail: BillingPayDetail[];
+}
+
+export interface BillingGroup {
+  user: string;
+  months: BillingMonth[];
+}
+
 
 export interface AuthResponse {
   billing: Billing;

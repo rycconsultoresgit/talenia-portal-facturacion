@@ -9,7 +9,10 @@ export const useUsersAll = (
   queryOptions?: QueryOptions,
 ) => {
   const fetchUsersAll = async () => {
-    const res = await userService.getAllUsers(params)
+    const res = await userService.getAllUsers({
+      page: params.page ?? 1,
+      limit: params.limit ?? 6,
+    })
     if(!res){
       return []
     }return res
