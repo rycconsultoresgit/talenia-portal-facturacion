@@ -28,7 +28,7 @@ type RoleOption = {
   name: string;
 };
 
-const CLIENT_ROLE_NAME = "Cliente";
+const CLIENT_ROLE_NAME = "Cuenta Administrativa Facturación";
 const ADMIN_ROLE_NAME = "Administrador";
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
