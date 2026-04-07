@@ -33,6 +33,7 @@ type RoleOption = {
 };
 
 const ADMIN_ROLE_NAME = "Administrador";
+const CLIENT_ROLE_NAME = "Cuenta Administrativa Facturación";
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 function NewUserModal({ isOpen, onOpenChange, onClose }) {
@@ -97,6 +98,15 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
 
   const selectedRole = roles.find(
     (roleOption) => String(roleOption.id) === role,
+  );
+  const availableRootRoles = useMemo(
+    () =>
+      roles.filter(
+        (roleOption) =>
+          roleOption.name === ADMIN_ROLE_NAME ||
+          roleOption.name === CLIENT_ROLE_NAME,
+      ),
+    [roles],
   );
   const isAdministratorRole = selectedRole?.name === ADMIN_ROLE_NAME;
   const adminPermissions = useMemo(
@@ -560,7 +570,7 @@ function NewUserModal({ isOpen, onOpenChange, onClose }) {
                     ],
                   }}
                 >
-                  {roles.map((roleOption) => (
+                  {availableRootRoles.map((roleOption) => (
                     <SelectItem
                       key={roleOption.id}
                       className="rounded-[5px] text-[13px] data-[selectable=true]:text-[13px] data-[selectable=true]:focus:bg-[#442F8D] data-[selectable=true]:focus:text-white"
