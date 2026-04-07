@@ -1,17 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
 import { plansService } from "../plansService";
+import type { Plan } from "@/app/types/plan.types";
 
-export const usePlanAll = (params: any = {}, queryOptions?: any) => {
+type QueryOptions = Record<string, unknown>;
+
+export const usePlanAll = (queryOptions?: QueryOptions) => {
   const fetchPlansAll = async () => {
     const res = await plansService.getAllPlans()
     if(!res){
-      return []
+      return [] as Plan[]
     }
     return res
     
   };
 
-  const query = useQuery<any>({
+  const query = useQuery<Plan[]>({
     queryKey: ["plans"],
     queryFn: fetchPlansAll,
     ...queryOptions,
@@ -19,8 +22,8 @@ export const usePlanAll = (params: any = {}, queryOptions?: any) => {
 
   return {
     ...query,
-    plansAll: query?.data,
-    totalPlans: query?.data?.lenght,
+    plansAll: query?.data ?? [],
+    totalPlans: query?.data?.length ?? 0,
     isLoadingPlans: query.isLoading
   };
 };

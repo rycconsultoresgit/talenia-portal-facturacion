@@ -182,9 +182,19 @@ const deleteUser = async (id: number): Promise<void> => {
 };
 
 //Traer a los usuarios
-const getAllUsers = async (params: { page: number; limit: number }) => {
+const getAllUsers = async (params: {
+  page: number;
+  limit: number;
+  find?: string;
+}) => {
   try {
-    const users = await apiClient.post("/users/all", { params: params });
+    const users = await apiClient.post("/users/all", {
+      params: {
+        page: params.page,
+        limit: params.limit,
+      },
+      find: params.find,
+    });
     return users.data;
   } catch (error) {
     console.log(error);

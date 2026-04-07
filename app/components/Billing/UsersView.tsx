@@ -29,6 +29,8 @@ function UsersView() {
   const formatter = new Intl.NumberFormat("es-CL");
   const LIMIT = 6;
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const {
     isOpen: newUserIsOpen,
@@ -51,8 +53,17 @@ function UsersView() {
     refetch: refetchUsers,
     totalUsers,
     isLoadingUsers,
-  } = useUsersAll({ page: currentPage, limit: LIMIT });
+  } = useUsersAll({
+    page: currentPage,
+    limit: LIMIT,
+    find: appliedSearch,
+  });
   const totalPages = Math.max(1, Math.ceil((totalUsers ?? 0) / LIMIT));
+
+  const applySearch = () => {
+    setCurrentPage(1);
+    setAppliedSearch(searchInput.trim());
+  };
 
   return (
     <>
@@ -62,8 +73,19 @@ function UsersView() {
           <div className="flex items-center justify-center gap-2">
             <div className="flex items-center justify-center gap-2">
               <div className="flex h-[32px] w-full items-center gap-2 rounded-[5px] bg-white px-3 focus:outline-none">
-                <BiSearch color="#CACCFD" />
+                <button
+                  type="button"
+                  onClick={applySearch}
+                  className="text-[#CACCFD] transition-opacity hover:opacity-80"
+                  aria-label="Buscar usuarios"
+                >
+                  <BiSearch color="currentColor" />
+                </button>
                 <input
+                  value={searchInput}
+                  onChange={(event) => {
+                    setSearchInput(event.target.value);
+                  }}
                   className="focus:outline-none"
                   placeholder="Buscar"
                 ></input>

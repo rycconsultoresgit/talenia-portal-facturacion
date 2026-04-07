@@ -2,7 +2,7 @@
 import NewPlanModal from "./modals/NewPlanModal";
 import EditPlanModal from "./modals/EditPlanModal";
 import DeletePlanModal from "./modals/DeletePlanModal";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
 import { IoAddCircleOutline } from "react-icons/io5";
@@ -10,8 +10,10 @@ import { Spinner, useDisclosure } from "@heroui/react";
 import { usePlanAll } from "@/app/api/queries/planService";
 import { permissionsService } from "@/app/api/permissionsService";
 import { Plan } from "@/app/types/plan.types";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 function PlansView() {
+  const LIMIT = 8;
   const {
     isOpen: isNewPlanOpen,
     onOpenChange: onNewPlanChange,
@@ -27,8 +29,9 @@ function PlansView() {
     onOpenChange: onDeletePlanChange,
     onClose: onDeletePlanClose,
   } = useDisclosure();
-  const { plansAll, isLoadingPlans, refetch } = usePlanAll();
+  const { plansAll, totalPlans, isLoadingPlans, refetch } = usePlanAll();
   const [selectedPlan, setSelectedPlan] = useState<null | Plan>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   function moneyParser(value: number): string {
     return value.toLocaleString("es-CL", {
@@ -54,6 +57,23 @@ function PlansView() {
     getPermissions();
   }, []);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil((totalPlans ?? 0) / LIMIT)),
+    [totalPlans],
+  );
+
+  const paginatedPlans = useMemo(() => {
+    const startIndex = (currentPage - 1) * LIMIT;
+    const endIndex = startIndex + LIMIT;
+    return plansAll.slice(startIndex, endIndex);
+  }, [currentPage, plansAll]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <>
       <div className="flex h-[633px] w-full flex-col justify-center gap-5 rounded-lg bg-gradient-to-r from-[#E9E3FF80] to-[#D9CEFF80] px-5 py-4">
@@ -72,10 +92,10 @@ function PlansView() {
         </div>
         {!isLoadingPlans ? (
           <div className="mx-auto grid h-[500px] w-[1288px] grid-cols-4 gap-6 rounded-[10px] py-2">
-            {plansAll?.slice(0, 6).map((plan: Plan, index: number) => (
+            {paginatedPlans.map((plan: Plan, index: number) => (
               <div
                 key={index}
-                className="flex h-full min-h-[138px] w-full min-w-[300px] flex-col justify-between gap-2 rounded-[5px] bg-[#FFFFFF80] px-4 py-4"
+                className="flex h-full max-h-[240px] min-h-[138px] w-full min-w-[300px] flex-col justify-between gap-2 rounded-[5px] bg-[#FFFFFF80] px-4 py-4"
               >
                 <div>
                   <p className="border-b-1 border-b-[#FFFFFF] py-2 text-[#372AAC]">
@@ -114,12 +134,38 @@ function PlansView() {
             <Spinner></Spinner>
           </div>
         )}
+        {totalPlans > 0 && (
+          <div className="mx-auto flex w-[1288px] items-center justify-end">
+            <div className="flex items-center justify-center gap-2 rounded-[5px] bg-[#FFFFFF66] px-2 py-2 text-darkPurple">
+              <div
+                onClick={() => {
+                  if (currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                  }
+                }}
+              >
+                <IoIosArrowBack className="hover:cursor-pointer" />
+              </div>
+              {currentPage} de {totalPages}
+              <div
+                onClick={() => {
+                  if (currentPage < totalPages) {
+                    setCurrentPage(currentPage + 1);
+                  }
+                }}
+              >
+                <IoIosArrowForward className="hover:cursor-pointer" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <NewPlanModal
         isOpen={isNewPlanOpen}
         onOpenChange={onNewPlanChange}
         onClose={()=>{
           onNewPlanClose()
+          setCurrentPage(1)
           refetch()
         }}
         permissions={permissions}
@@ -131,6 +177,7 @@ function PlansView() {
         onClose={() => {
           onEditPlanClose();
           setSelectedPlan(null);
+          setCurrentPage(1);
           refetch();
         }}
         permissions={permissions}
@@ -142,6 +189,7 @@ function PlansView() {
         onClose={() => {
           onDeletePlanClose();
           setSelectedPlan(null);
+          setCurrentPage(1);
           refetch();
         }}
       ></DeletePlanModal>

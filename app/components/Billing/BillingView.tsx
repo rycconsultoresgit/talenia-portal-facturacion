@@ -16,7 +16,7 @@ import type {
 function BillingView() {
   const LIMIT = 6;
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [find] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const {
@@ -56,6 +56,10 @@ function BillingView() {
     { key: 10, label: "Nov" },
     { key: 11, label: "Dic" },
   ];
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, index) => String(currentYear - index));
+  }, []);
 
   function moneyParser(value: number): string {
     return value.toLocaleString("es-CL", {
@@ -94,7 +98,8 @@ function BillingView() {
                 <Select
                   disallowEmptySelection
                   aria-label="random"
-                  placeholder="Dic"
+                  selectedKeys={[String(selectedMonth)]}
+                  placeholder={months.find((month) => month.key === selectedMonth)?.label}
                   onSelectionChange={(e) => {
                     setSelectedMonth(Number(e.currentKey));
                   }}
@@ -127,8 +132,13 @@ function BillingView() {
                 </Select>
 
                 <Select
+                  disallowEmptySelection
                   aria-label="random"
-                  placeholder="2025"
+                  selectedKeys={[String(selectedYear)]}
+                  placeholder={String(selectedYear)}
+                  onSelectionChange={(e) => {
+                    setSelectedYear(Number(e.currentKey));
+                  }}
                   className="text-darkPurple"
                   classNames={{
                     innerWrapper: "",
@@ -146,8 +156,8 @@ function BillingView() {
                       "bg-[#FFFFFF66] rounded-[5px] data-[hover=true]:bg-[#FFFFFF66] text-[#645790] min-h-[32px] h-[10px] py-0",
                   }}
                 >
-                  {["2025"].map((month) => (
-                    <SelectItem key={month}>{month}</SelectItem>
+                  {years.map((year) => (
+                    <SelectItem key={year}>{year}</SelectItem>
                   ))}
                 </Select>
               </div>

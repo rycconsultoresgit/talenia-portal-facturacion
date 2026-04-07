@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "../userService";
 
-type PaginationParams = { page?: number; limit?: number };
+type PaginationParams = { page?: number; limit?: number; find?: string };
 type QueryOptions = Record<string, unknown>;
 
 export const useUsersAll = (
@@ -12,6 +12,7 @@ export const useUsersAll = (
     const res = await userService.getAllUsers({
       page: params.page ?? 1,
       limit: params.limit ?? 6,
+      find: params.find,
     })
     if(!res){
       return []
