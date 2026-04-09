@@ -8,8 +8,11 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [cvs, setCvs] = useState("");
+  const [evaluations, setEvaluations] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>(
+    [],
+  );
   const clientPermissions = (permissions as Permission[]).filter(
     (permission) => permission.category === "client",
   );
@@ -29,6 +32,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
         name: name,
         price: price,
         cvs: cvs,
+        evaluations: evaluations,
         description: description,
       });
       await plansService.assignPermissionsToPlan(
@@ -39,6 +43,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
       setCvs("");
       setPrice("");
       setDescription("");
+      setEvaluations("");
       setSelectedPermissionIds([]);
       onClose();
     } catch (error) {
@@ -60,7 +65,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
       backdrop="blur"
       classNames={{
         base: "bg-white/80",
-        backdrop: "backdrop-blur-sm"
+        backdrop: "backdrop-blur-sm",
       }}
     >
       <ModalContent>
@@ -117,6 +122,21 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
             </div>
             <div className="flex flex-col">
               <p className="text-[12px] font-[400] text-[#251D3F]">
+                Cantidad de evaluaciones
+              </p>
+              <input
+                placeholder="10"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={evaluations}
+                onChange={(e) => {
+                  setEvaluations(e.target.value.replace(/[^0-9]/g, ""));
+                }}
+                className="h-[32px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
+              ></input>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-[12px] font-[400] text-[#251D3F]">
                 Descripción del plan
               </p>
               <textarea
@@ -129,10 +149,8 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
               ></textarea>
             </div>
             <div>
-              <p className="text-[14px] font-[500] text-[#251D3F]">
-                Permisos
-              </p>
-              <div className="w-full grid grid-cols-2 gap-[9px] mt-2 pl-2">
+              <p className="text-[14px] font-[500] text-[#251D3F]">Permisos</p>
+              <div className="mt-2 grid w-full grid-cols-2 gap-[9px] pl-2">
                 {clientPermissions.map((permission: Permission) => (
                   <div key={permission.id} className="flex items-center gap-2">
                     <input
@@ -141,10 +159,11 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
                       onChange={() => handlePermissionToggle(permission.id)}
                       className="h-[16px] w-[16px] accent-[#372AAC]"
                     ></input>
-                    <p className="text-[14px] font-[400] text-[#251D3F]">{permission.name}</p>
+                    <p className="text-[14px] font-[400] text-[#251D3F]">
+                      {permission.name}
+                    </p>
                   </div>
                 ))}
-
               </div>
             </div>
             <div className="mt-3 flex h-[32px] items-center justify-end gap-2">
@@ -153,6 +172,7 @@ function NewPlanModal({ isOpen, onOpenChange, onClose, permissions }) {
                   setName("");
                   setCvs("");
                   setPrice("");
+                  setEvaluations("");
                   setDescription("");
                   setSelectedPermissionIds([]);
                   onClose();

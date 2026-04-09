@@ -40,19 +40,17 @@ function PlansView() {
     });
   }
 
-  const [permissions, setPermissions] = useState([
-    "Permiso dummy",
-  ]);
+  const [permissions, setPermissions] = useState(["Permiso dummy"]);
 
   useEffect(() => {
     const getPermissions = async () => {
-    try {
-      const response = await permissionsService.getAllPermissions();
-      console.log(response);
-      setPermissions(response.data);
-    } catch (error) {
-      console.error("Error al cargar permisos:", error);
-    }
+      try {
+        const response = await permissionsService.getAllPermissions();
+        console.log(response);
+        setPermissions(response.data);
+      } catch (error) {
+        console.error("Error al cargar permisos:", error);
+      }
     };
     getPermissions();
   }, []);
@@ -99,14 +97,12 @@ function PlansView() {
               >
                 <div>
                   <p className="border-b-1 border-b-[#FFFFFF] py-2 text-[#372AAC]">
-                    Plan {plan.name} ({plan.cvs}CV)
+                    Plan {plan.name} ({plan.cvs} CV / {plan.evaluations} eval.)
                   </p>
-                  <p className="text-[14px] font-[300] pt-2">
+                  <p className="pt-2 text-[14px] font-[300]">
                     Precio: ${moneyParser(plan.price)}
                   </p>
-                  <p>
-                    {plan.description}
-                  </p>
+                  <p>{plan.description}</p>
                 </div>
                 <div className="flex items-center justify-end gap-2">
                   <div
@@ -120,7 +116,7 @@ function PlansView() {
                   <div
                     onClick={() => {
                       onDeletePlanChange();
-                      setSelectedPlan(plan)
+                      setSelectedPlan(plan);
                     }}
                   >
                     <AiOutlineDelete className="hover:cursor-pointer" />
@@ -163,10 +159,10 @@ function PlansView() {
       <NewPlanModal
         isOpen={isNewPlanOpen}
         onOpenChange={onNewPlanChange}
-        onClose={()=>{
-          onNewPlanClose()
-          setCurrentPage(1)
-          refetch()
+        onClose={() => {
+          onNewPlanClose();
+          setCurrentPage(1);
+          refetch();
         }}
         permissions={permissions}
       ></NewPlanModal>

@@ -3,6 +3,7 @@ export interface Plan {
   name: string;
   price: number;
   cvs: number;
+  evaluations: number;
   description: string;
   permissions: {
     id: number;

@@ -7,8 +7,11 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newCvs, setNewCvs] = useState("");
+  const [newEvaluations, setNewEvaluations] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>(
+    [],
+  );
   const clientPermissions = (permissions as Permission[]).filter(
     (permission) => permission.category === "client",
   );
@@ -46,6 +49,9 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
       if (newCvs != "" && newCvs != plan?.cvs) {
         createObject = { ...createObject, cvs: newCvs };
       }
+      if (newEvaluations != "" && newEvaluations != plan?.evaluations) {
+        createObject = { ...createObject, evaluations: newEvaluations };
+      }
       if (newDescription != "" && newDescription != plan?.description) {
         createObject = { ...createObject, description: newDescription };
       }
@@ -55,9 +61,13 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
         setNewName("");
         setNewCvs("");
         setNewPrice("");
+        setNewEvaluations("");
         setNewDescription("");
       }
-      await plansService.assignPermissionsToPlan(plan.id, selectedPermissionIds);
+      await plansService.assignPermissionsToPlan(
+        plan.id,
+        selectedPermissionIds,
+      );
       onClose();
     } catch (error) {
       console.log(error);
@@ -78,7 +88,7 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
       backdrop="blur"
       classNames={{
         base: "bg-white/80",
-        backdrop: "backdrop-blur-sm"
+        backdrop: "backdrop-blur-sm",
       }}
     >
       <ModalContent>
@@ -98,7 +108,9 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
               </p>
               <input
                 value={newName}
-                onChange={(e)=>{setNewName(e.target.value)}}
+                onChange={(e) => {
+                  setNewName(e.target.value);
+                }}
                 placeholder={`${plan?.name}`}
                 className="h-[32px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
               ></input>
@@ -107,7 +119,9 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
               <p className="text-[12px] font-[400] text-[#251D3F]">Precio</p>
               <input
                 value={newPrice}
-                onChange={(e)=>{setNewPrice(e.target.value.replace(/[^0-9]/g, ""))}}
+                onChange={(e) => {
+                  setNewPrice(e.target.value.replace(/[^0-9]/g, ""));
+                }}
                 placeholder={`${plan?.price}`}
                 className="h-[32px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
               ></input>
@@ -118,8 +132,23 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
               </p>
               <input
                 value={newCvs}
-                onChange={(e)=>{setNewCvs(e.target.value.replace(/[^0-9]/g, ""))}}
+                onChange={(e) => {
+                  setNewCvs(e.target.value.replace(/[^0-9]/g, ""));
+                }}
                 placeholder={`${plan?.cvs}`}
+                className="h-[32px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
+              ></input>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-[12px] font-[400] text-[#251D3F]">
+                Cantidad de evaluaciones
+              </p>
+              <input
+                value={newEvaluations}
+                onChange={(e) => {
+                  setNewEvaluations(e.target.value.replace(/[^0-9]/g, ""));
+                }}
+                placeholder={`${plan?.evaluations ?? 0}`}
                 className="h-[32px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
               ></input>
             </div>
@@ -129,16 +158,16 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
               </p>
               <textarea
                 value={newDescription}
-                onChange={(e)=>{setNewDescription(e.target.value)}}
+                onChange={(e) => {
+                  setNewDescription(e.target.value);
+                }}
                 placeholder={`${plan?.description}`}
                 className="h-[80px] w-full rounded-[5px] border px-2 py-2 text-[14px] font-[400] text-darkPurple focus:outline-none"
               ></textarea>
             </div>
             <div>
-              <p className="text-[14px] font-[500] text-[#251D3F]">
-                Permisos
-              </p>
-              <div className="w-full grid grid-cols-2 gap-[9px] mt-2 pl-2">
+              <p className="text-[14px] font-[500] text-[#251D3F]">Permisos</p>
+              <div className="mt-2 grid w-full grid-cols-2 gap-[9px] pl-2">
                 {clientPermissions.map((permission: Permission) => (
                   <div key={permission.id} className="flex items-center gap-2">
                     <input
@@ -147,10 +176,11 @@ function EditPlanModal({ plan, isOpen, onOpenChange, onClose, permissions }) {
                       onChange={() => handlePermissionToggle(permission.id)}
                       className="h-[16px] w-[16px] accent-[#372AAC]"
                     ></input>
-                    <p className="text-[14px] font-[400] text-[#251D3F]">{permission.name}</p>
+                    <p className="text-[14px] font-[400] text-[#251D3F]">
+                      {permission.name}
+                    </p>
                   </div>
                 ))}
-
               </div>
             </div>
             <div className="mt-3 flex h-[32px] items-center justify-end gap-2">
