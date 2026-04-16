@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { BiSearch } from "react-icons/bi";
 import { useUsersAll } from "@/app/api/queries/userService";
-import { Spinner, useDisclosure } from "@heroui/react";
+import { Spinner, Tooltip, useDisclosure } from "@heroui/react";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { FiEdit3 } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
@@ -138,7 +138,11 @@ function UsersView() {
                   {user.company?.name ?? "Sin empresa"}
                 </div>
                 <div className="w-full">{user.plan?.name ?? "Sin plan"}</div>
-                <div className="w-full">{user.role?.name ?? "Sin rol"}</div>
+                <div className="w-full overflow-hidden">
+                  <Tooltip content={<p>{user.role?.name ?? "Sin rol"}</p>} closeDelay={0}>
+                    <p className="truncate">{user.role?.name ?? "Sin rol"}</p>
+                  </Tooltip>
+                </div>
                 <div className="flex items-center gap-3">
                   <div
                     className="hover:cursor-pointer"
