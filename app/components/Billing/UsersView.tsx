@@ -139,7 +139,7 @@ function UsersView() {
                 </div>
                 <div className="w-full">{user.plan?.name ?? "Sin plan"}</div>
                 <div className="w-full overflow-hidden">
-                  <Tooltip content={<p>{user.role?.name ?? "Sin rol"}</p>} closeDelay={0}>
+                  <Tooltip content={<p>{user.role?.name ?? "Sin rol"}</p>} closeDelay={0} isDisabled={user.role?.name?.length < 15}>
                     <p className="truncate">{user.role?.name ?? "Sin rol"}</p>
                   </Tooltip>
                 </div>
