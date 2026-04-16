@@ -33,8 +33,8 @@ interface Bill {
 function BillingSection() {
   const { isOpen, onClose, onOpenChange } = useDisclosure();
   const [billing, setBilling] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(10);
+  const [currentPage] = useState(1);
+  const [total] = useState(10);
   const [billDetail, setBillDetail] = useState([]);
 
   function moneyParser(value: number): string {

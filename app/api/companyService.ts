@@ -1,6 +1,6 @@
 import apiClient from "./config/api-config.api";
 
-const createCompany = async (body:any) => {
+const createCompany = async (body: Record<string, unknown>) => {
   try {
     const company = await apiClient.post("/companies",body);
     return company.data;

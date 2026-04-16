@@ -26,7 +26,7 @@ function DeleteRolModal({ rol, isOpen, onOpenChange, onClose }) {
           width: "280px",
         },
       });
-    } catch (error) {
+    } catch {
       toast("Error al borrar el rol", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,

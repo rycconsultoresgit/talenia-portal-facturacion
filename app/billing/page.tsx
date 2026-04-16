@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import MainContainer from "../components/Common/MainContainer";
 import login_bg from "../assets/login_container_bg.png";
 import MainFooter from "../components/Common/MainFooter";

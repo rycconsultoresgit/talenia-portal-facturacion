@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import GPLogo from "@/app/assets/gp_logo.png";
 import TaleniaLogo from "@/app/assets/logo_sumary.png";
@@ -27,10 +27,6 @@ export default function PdfContent({
   allCandidates,
   project,
 }: Readonly<pdfContentProps>) {
-
-  useEffect(() => {
-  console.log("Desde el componente a imprimir",selectedCvs);
-}, [])
   return (
     <div id="pdf-content" className="w-[794px] text-[16px] text-darkPurple">
       <div className="flex h-fit w-[98%] flex-col ">

@@ -8,8 +8,8 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { TbCalendarMonth } from "react-icons/tb";
 
 function AnalysisSection() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(10);
+  const [currentPage] = useState(1);
+  const [total] = useState(10);
   const [billing, setBilling] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
@@ -50,7 +50,7 @@ function AnalysisSection() {
       //Armamos el objeto que ira en la tabla
       //Agrupamos por mes
       bills.map((bill: Billing) => {
-        let month = new Date(bill.date).getMonth();
+        const month = new Date(bill.date).getMonth();
         console.log(month);
       });
     };

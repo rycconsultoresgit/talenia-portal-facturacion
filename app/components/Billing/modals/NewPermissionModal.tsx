@@ -4,12 +4,11 @@ import React, { useState } from "react";
 
 function NewPermissionModal({ isOpen, onOpenChange, onClose }) {
   const [name, setName] = useState("");
-  const [component, setComponent] = useState("")
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
       onClose();
-    } catch (error) {}
+    } catch {}
   };
 
   return (

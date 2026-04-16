@@ -1,16 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { userService } from "../userService";
 
-export const useRolesAll = (params: any = {}, queryOptions?: any) => {
+type RoleItem = {
+  id: string;
+  name: string;
+  description: string;
+  permisses: string;
+};
+
+export const useRolesAll = (
+  queryOptions?: UseQueryOptions<RoleItem[], Error>,
+) => {
   const fetchRolesAll = async () => {
-    const res = await userService.getAllRoles()
-    if(!res){
-      return []
+    const res = await userService.getAllRoles();
+    if (!res) {
+      return [];
     }
-    return res
+    return res as RoleItem[];
   };
 
-  const query = useQuery<any>({
+  const query = useQuery<RoleItem[], Error>({
     queryKey: ["roles"],
     queryFn: fetchRolesAll,
     ...queryOptions,
@@ -19,7 +28,7 @@ export const useRolesAll = (params: any = {}, queryOptions?: any) => {
   return {
     ...query,
     rolesAll: query?.data,
-    totalRoles: query?.data?.lenght,
-    isLoadingRoles: query.isLoading
+    totalRoles: query?.data?.length,
+    isLoadingRoles: query.isLoading,
   };
 };

@@ -1,12 +1,11 @@
 "use client";
 
-import { Spinner, useDisclosure } from "@heroui/react";
-import React, { useEffect, useState } from "react";
+import { useDisclosure } from "@heroui/react";
+import React, { useState } from "react";
 import { FiEdit3 } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { IoSettingsOutline } from "react-icons/io5";
-import { BiSearch } from "react-icons/bi";
 import NewRoleModal from "./modals/NewRoleModal";
 import { useRolesAll } from "@/app/api/queries/rolesService";
 import EditRoleModal from "./modals/EditRoleModal";
@@ -20,7 +19,7 @@ interface Role {
 }
 
 function RolesView() {
-  const { rolesAll, isLoadingRoles, refetch } = useRolesAll();
+  const { rolesAll, refetch } = useRolesAll();
   const [permissesView, setPermissesView] = useState(false);
   const [selectedRole, setSelectedRole] = useState<null | Role>(null);
   const {

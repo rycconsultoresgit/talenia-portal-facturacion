@@ -52,7 +52,7 @@ function EditRoleModal({ rol, isOpen, onOpenChange, onClose }) {
       setNewName("");
       setNewDescription("");
       onClose();
-    } catch (error) {
+    } catch {
       toast("Error al editar el Rol", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,
@@ -70,7 +70,7 @@ function EditRoleModal({ rol, isOpen, onOpenChange, onClose }) {
   useEffect(() => {
     setNewName(rol?.name)
     setNewDescription(rol?.description)
-  }, [])
+  }, [rol?.description, rol?.name])
   
 
   return (

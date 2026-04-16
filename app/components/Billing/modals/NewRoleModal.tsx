@@ -20,7 +20,7 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [permisses, setPermisses] = useState("Default");
+  const [permisses] = useState("Default");
 
   const handleCreateRole = async () => {
     try {
@@ -46,7 +46,7 @@ function NewRoleModal({ isOpen, onOpenChange, onClose }) {
       setName("");
       setDescription("");
       onClose();
-    } catch (error) {
+    } catch {
       toast("Error al crear el rol", {
         icon: <LiaGrinStars color="#372AAC" size={16} />,
         duration: 2000,

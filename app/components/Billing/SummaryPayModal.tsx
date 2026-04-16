@@ -1,7 +1,6 @@
 "use client";
 
 import { Modal, ModalContent } from "@heroui/react";
-import { RadioGroup, Radio } from "@heroui/react";
 
 interface RoadmapModalProps {
   isOpen: boolean;
