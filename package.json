@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack -p 9303",
     "format": "prettier --write .",
     "build": "next build",
-    "start": "next start -p 9300",
+    "start": "next start -p 9303",
     "lint": "npx oxlint && next lint"
   },
   "dependencies": {
