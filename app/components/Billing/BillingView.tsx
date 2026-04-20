@@ -188,7 +188,7 @@ function BillingView() {
               <div className="w-full">Mes</div>
               <div className="w-full">Pago plan</div>
               <div className="w-full">Analisis extra</div>
-              <div className="w-full">Total pago</div>
+              <div className="w-full">Total pago + IVA</div>
               <div className="w-full">Fecha de pago</div>
               <div className="w-full">Estado</div>
             </div>
